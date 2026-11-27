@@ -6,3 +6,11 @@ dist/
 .claude/
 .build/
 .swiftpm/
+build/
+.gradle/
+.kotlin/
+.dart_tool/
+local.properties
+*.iml
+.idea/
+example/ios/Flutter/ephemeral/

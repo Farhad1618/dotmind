@@ -1,0 +1,24 @@
+name: dotmind
+description: Dot-matrix status indicator for AI interfaces. Follows an Anthropic or OpenAI stream and shows what the model is doing now, from thinking and tool calls to writing.
+version: 0.1.0
+repository: https://github.com/Farhad1618/dotmind
+issue_tracker: https://github.com/Farhad1618/dotmind/issues
+topics:
+  - ai
+  - llm
+  - animation
+  - indicator
+  - streaming
+
+environment:
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

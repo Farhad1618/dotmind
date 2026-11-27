@@ -1,0 +1,21 @@
+name: dotmind_example
+description: Every dotmind state, a simulated model turn and the bare variant.
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.14.0
+  flutter: ">=3.50.0"
+
+dependencies:
+  dotmind:
+    path: ..
+  flutter:
+    sdk: flutter
+  material_ui: ^1.1.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

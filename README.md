@@ -121,12 +121,24 @@ CSS custom properties: `--dm-bg`, `--dm-edge`, `--dm-well`, `--dm-ink`, `--dm-pe
 
 Hidden indicators stop drawing, every indicator on a page shares one animation frame, and the label sits in a polite live region so screen readers hear "Searching", not every frame.
 
-## Repo layout
+## Platforms
+
+One repo, one behaviour. Every port reproduces the same 136 reference frames in `spec/golden.json` in its own test suite, so a Claude turn looks the same on a web page, an iPhone, a Pixel and a Flutter app.
+
+| Platform | Folder | Package | Drawing | Tests |
+|---|---|---|---|---|
+| Web: React, Vue, Svelte, plain HTML | `packages/dotmind` | npm `dotmind` | Canvas 2D, shared rAF loop | 15 |
+| iOS, iPadOS, macOS, watchOS, tvOS, visionOS | `packages/swift` | Swift Package `DotMind` (this repo's URL) | SwiftUI `Canvas` + `TimelineView` | 33 |
+| Android | `packages/android` | Maven `io.github.farhad1618:dotmind-compose` | Jetpack Compose `Canvas` | 49 |
+| Flutter (iOS, Android, web, desktop) | `packages/flutter` | pub `dotmind` | `CustomPainter` + `Ticker` | 43 |
+| React Native | `packages/react-native` | npm `dotmind-native` | Skia picture on the UI thread | 45 |
+
+Each folder has its own README with install steps and examples. Every port has the same parts: a core with no UI code (tracker, tool classification, scenes, renderer), stream adapters for Anthropic and OpenAI, and a view that pauses when hidden, respects reduce motion and reads its label to screen readers.
 
 ```
-packages/dotmind   the npm package (core, React, web component, adapters)
-demo               live demo replaying recorded Claude and OpenAI turns
-spec               the pattern contract other platforms port from
+spec               the rendering contract and the golden parity fixture
+demo               live web demo replaying recorded Claude and OpenAI turns
+scripts            demo server and fixture generator
 ```
 
 ```bash
@@ -134,10 +146,6 @@ npm install --prefix packages/dotmind
 npm test
 npm run demo        # http://127.0.0.1:4317/
 ```
-
-## Other platforms
-
-The core is plain math: each scene is a function from time and progress to 64 brightness values. `spec/SPEC.md` pins that contract so SwiftUI and Jetpack Compose packages can live in this repo beside the web package and match it frame for frame.
 
 ## Credits
 
