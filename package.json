@@ -1,0 +1,11 @@
+{
+  "name": "dotmind-repo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix packages/dotmind run build",
+    "test": "npm --prefix packages/dotmind test",
+    "typecheck": "npm --prefix packages/dotmind run typecheck",
+    "demo": "npm run build && node scripts/serve.mjs"
+  }
+}

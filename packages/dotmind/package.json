@@ -1,0 +1,91 @@
+{
+  "name": "dotmind",
+  "version": "0.1.0",
+  "description": "Dot-matrix AI status indicators that follow what the model is actually doing: reasoning, calling tools, writing. Wire in an Anthropic, OpenAI or AI SDK stream and the dots change on their own.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Farhad1618/dotmind.git",
+    "directory": "packages/dotmind"
+  },
+  "homepage": "https://github.com/Farhad1618/dotmind#readme",
+  "bugs": {
+    "url": "https://github.com/Farhad1618/dotmind/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/element-define.js"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "default": "./dist/element.js"
+    },
+    "./element/define": {
+      "types": "./dist/element-define.d.ts",
+      "default": "./dist/element-define.js"
+    },
+    "./anthropic": {
+      "types": "./dist/adapters/anthropic.d.ts",
+      "default": "./dist/adapters/anthropic.js"
+    },
+    "./openai": {
+      "types": "./dist/adapters/openai.d.ts",
+      "default": "./dist/adapters/openai.js"
+    },
+    "./ai-sdk": {
+      "types": "./dist/adapters/ai-sdk.d.ts",
+      "default": "./dist/adapters/ai-sdk.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types test/*.test.ts"
+  },
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "loader",
+    "thinking",
+    "indicator",
+    "dot-matrix",
+    "llm",
+    "streaming",
+    "react",
+    "web-component",
+    "anthropic",
+    "openai",
+    "ai-sdk"
+  ]
+}
