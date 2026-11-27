@@ -52,3 +52,14 @@ Scene changes blend over 0.35 s with smoothstep, mixing both values and colours.
 ## 6. Drawing
 
 Padding 12% of the side, dot radius 34% of the step between dot centres, every dot drawn at 14% alpha in the scene colour, lit dots drawn on top with a glow of `radius · (1.5 + 2.5·w)` where `w = clamp((v - 0.85) / 0.55, 0, 1)`.
+
+## 7. Parity fixture
+
+`spec/golden.json` is generated from the TypeScript reference by `node scripts/golden.mjs` (after `npm run build`). Every port loads it in its tests and must match within `tolerance`:
+
+- `frames`: each scene sampled at `t` ∈ {0, 0.5, 1.7, 12.5} and `progress` ∈ {0, 137}, energy 0.8.
+- `tools`: tool name → kind.
+- `scenes`: activity → scene and default English label.
+- `energy`: a renderer created on scene `type`, `feed(0)`, then for frame `i` in 0…239: `step(1/60)`; if `i < 120`, add 1 (i < 60) or 8 (otherwise) to progress and `feed` it; after every 20th frame record `level` and `sample()`.
+
+Numeric rules ports must follow to match: compute in 64-bit floats; round with `floor(x + 0.5)` (JavaScript `Math.round`), never banker's rounding or round-half-away-from-zero; `%` on possibly negative numbers uses `((a % n) + n) % n`; `hash(i, s) = fract(sin(i·127.1 + s·311.7) · 43758.5453)` with `fract(x) = x - floor(x)`.
