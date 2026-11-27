@@ -2,17 +2,11 @@ import { labelFor, type LabelMap } from "./labels.ts";
 import { SCENE_COLORS } from "./patterns.ts";
 import { DotRenderer } from "./renderer.ts";
 import { sceneFor } from "./scene.ts";
-import type { Activity, Phase, RGB, SceneName } from "./types.ts";
+import { GRID } from "./patterns.ts";
+import type { Activity, DotMindOptions, Phase, RGB } from "./types.ts";
 
-export interface DotMindOptions {
-  variant?: "pill" | "bare";
-  size?: number;
-  label?: string | false;
-  labels?: Partial<LabelMap>;
-  palette?: Partial<Record<SceneName, RGB>>;
-  scene?: SceneName;
-  reducedMotion?: boolean;
-}
+
+export type { DotMindOptions };
 
 export interface DotMindController {
   readonly element: HTMLElement;
@@ -44,12 +38,57 @@ export function injectStyles(root: Document | ShadowRoot): void {
   else root.appendChild(style);
 }
 
+const CELLS = GRID * GRID;
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+
+export function drawMatrix(
+  renderer: DotRenderer,
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  values: Float32Array,
+  rgb: [number, number, number],
+  base = 0.14,
+): void {
+  renderer.sample(values);
+  const [r, g, b] = renderer.color(rgb);
+  const pad = px * 0.12;
+  const step = (px - pad * 2) / (GRID - 1);
+  const rad = step * 0.34;
+  ctx.clearRect(0, 0, px, px);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${base})`;
+  ctx.beginPath();
+  for (let i = 0; i < CELLS; i++) {
+    const x = pad + (i % GRID) * step;
+    const y = pad + Math.floor(i / GRID) * step;
+    ctx.moveTo(x + rad, y);
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+  }
+  ctx.fill();
+  for (let i = 0; i < CELLS; i++) {
+    const v = clamp(values[i], 0, 1.5);
+    if (v < 0.03) continue;
+    const x = pad + (i % GRID) * step;
+    const y = pad + Math.floor(i / GRID) * step;
+    const w = clamp((v - 0.85) / 0.55, 0, 1);
+    const a = clamp(v, 0, 1);
+    ctx.shadowColor = `rgba(${r | 0},${g | 0},${b | 0},${a})`;
+    ctx.shadowBlur = rad * (1.5 + w * 2.5);
+    ctx.fillStyle = `rgba(${(r + (255 - r) * w) | 0},${(g + (255 - g) * w) | 0},${(b + (255 - b) * w) | 0},${a})`;
+    ctx.beginPath();
+    ctx.arc(x, y, rad * (1 + w * 0.12), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 interface Instance {
   renderer: DotRenderer;
   ctx: CanvasRenderingContext2D;
   px: number;
   visible: boolean;
   still: boolean;
+  values: Float32Array;
+  rgb: [number, number, number];
 }
 
 const live = new Set<Instance>();
@@ -64,7 +103,7 @@ function loop(now: number) {
     if (!inst.visible || inst.still) continue;
     any = true;
     inst.renderer.step(dt);
-    inst.renderer.draw(inst.ctx, inst.px);
+    drawMatrix(inst.renderer, inst.ctx, inst.px, inst.values, inst.rgb);
   }
   frame = any || live.size ? requestAnimationFrame(loop) : 0;
   if (!frame) last = 0;
@@ -95,7 +134,7 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
   if (!ctx) throw new Error("dotmind needs a 2D canvas context");
   const reduce =
     opts.reducedMotion ?? (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const inst: Instance = { renderer: new DotRenderer(), ctx, px: 0, visible: true, still: reduce };
+  const inst: Instance = { renderer: new DotRenderer(), ctx, px: 0, visible: true, still: reduce, values: new Float32Array(CELLS), rgb: [0, 0, 0] };
   let activity: Activity = { phase: "idle" };
   let drawn = false;
 
@@ -138,7 +177,7 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
       inst.renderer.step(1.2);
       inst.renderer.step(0.5);
     }
-    if (inst.still || !drawn || !inst.visible) inst.renderer.draw(ctx!, inst.px);
+    if (inst.still || !drawn || !inst.visible) drawMatrix(inst.renderer, ctx!, inst.px, inst.values, inst.rgb);
     drawn = true;
   }
 

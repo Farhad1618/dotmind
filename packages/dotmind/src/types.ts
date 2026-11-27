@@ -1,3 +1,5 @@
+import type { LabelMap } from "./labels.ts";
+
 export type Phase = "idle" | "thinking" | "tool" | "writing" | "waiting" | "error" | "done";
 
 export type ToolKind = "search" | "browse" | "code" | "file" | "database" | "compute" | "generic";
@@ -48,3 +50,13 @@ export type SceneName =
   | "orbit"
   | "serpent"
   | "pulse";
+
+export interface DotMindOptions {
+  variant?: "pill" | "bare";
+  size?: number;
+  label?: string | false;
+  labels?: Partial<LabelMap>;
+  palette?: Partial<Record<SceneName, RGB>>;
+  scene?: SceneName;
+  reducedMotion?: boolean;
+}

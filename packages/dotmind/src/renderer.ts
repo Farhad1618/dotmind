@@ -1,11 +1,10 @@
 import { GRID, PATTERNS, SCENE_COLORS } from "./patterns.ts";
-import type { RGB, SceneName } from "./types.ts";
+import type { PatternContext, RGB, SceneName } from "./types.ts";
 
 const CELLS = GRID * GRID;
 const BLEND_SECONDS = 0.35;
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const mix = (a: RGB, b: RGB, k: number): RGB => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
 
 interface Layer {
   scene: SceneName;
@@ -20,6 +19,8 @@ export class DotRenderer {
   private blend = 1;
   private readonly cur = new Float32Array(CELLS);
   private readonly prev = new Float32Array(CELLS);
+  private readonly curCtx: PatternContext = { energy: 0, progress: 0 };
+  private readonly prevCtx: PatternContext = { energy: 0, progress: 0 };
   private energy = 0.3;
   private rate = 0;
   private lastProgress: number | null = null;
@@ -88,53 +89,29 @@ export class DotRenderer {
 
   sample(out: Float32Array = new Float32Array(CELLS)): Float32Array {
     const now = this.progressNow();
-    const ctxFor = (layer: Layer) => ({ energy: this.energy, progress: Math.max(0, now - layer.origin) });
-    PATTERNS[this.current.scene](this.current.t, this.cur, ctxFor(this.current));
+    this.curCtx.energy = this.energy;
+    this.curCtx.progress = Math.max(0, now - this.current.origin);
+    PATTERNS[this.current.scene](this.current.t, this.cur, this.curCtx);
     if (!this.previous) {
       out.set(this.cur);
       return out;
     }
-    PATTERNS[this.previous.scene](this.previous.t, this.prev, ctxFor(this.previous));
+    this.prevCtx.energy = this.energy;
+    this.prevCtx.progress = Math.max(0, now - this.previous.origin);
+    PATTERNS[this.previous.scene](this.previous.t, this.prev, this.prevCtx);
     const k = this.easedBlend();
     for (let i = 0; i < CELLS; i++) out[i] = this.prev[i] * (1 - k) + this.cur[i] * k;
     return out;
   }
 
-  color(): RGB {
-    return this.previous ? mix(this.previous.color, this.current.color, this.easedBlend()) : this.current.color;
-  }
-
-  draw(ctx: CanvasRenderingContext2D, px: number, base = 0.14): void {
-    const values = this.sample();
-    const [r, g, b] = this.color();
-    const pad = px * 0.12;
-    const step = (px - pad * 2) / (GRID - 1);
-    const rad = step * 0.34;
-    ctx.clearRect(0, 0, px, px);
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${base})`;
-    ctx.beginPath();
-    for (let i = 0; i < CELLS; i++) {
-      const x = pad + (i % GRID) * step;
-      const y = pad + Math.floor(i / GRID) * step;
-      ctx.moveTo(x + rad, y);
-      ctx.arc(x, y, rad, 0, Math.PI * 2);
-    }
-    ctx.fill();
-    for (let i = 0; i < CELLS; i++) {
-      const v = clamp(values[i], 0, 1.5);
-      if (v < 0.03) continue;
-      const x = pad + (i % GRID) * step;
-      const y = pad + Math.floor(i / GRID) * step;
-      const w = clamp((v - 0.85) / 0.55, 0, 1);
-      const a = clamp(v, 0, 1);
-      ctx.shadowColor = `rgba(${r | 0},${g | 0},${b | 0},${a})`;
-      ctx.shadowBlur = rad * (1.5 + w * 2.5);
-      ctx.fillStyle = `rgba(${(r + (255 - r) * w) | 0},${(g + (255 - g) * w) | 0},${(b + (255 - b) * w) | 0},${a})`;
-      ctx.beginPath();
-      ctx.arc(x, y, rad * (1 + w * 0.12), 0, Math.PI * 2);
-      ctx.fill();
-    }
+  color(out: [number, number, number] = [0, 0, 0]): [number, number, number] {
+    const from = this.previous?.color ?? this.current.color;
+    const to = this.current.color;
+    const k = this.previous ? this.easedBlend() : 1;
+    out[0] = from[0] + (to[0] - from[0]) * k;
+    out[1] = from[1] + (to[1] - from[1]) * k;
+    out[2] = from[2] + (to[2] - from[2]) * k;
+    return out;
   }
 
   private progressNow(): number {
