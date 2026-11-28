@@ -7,6 +7,8 @@ export interface DotMindTheme {
   fontFamily: string;
   fontSize: number;
   shimmerSeconds: number;
+  auraNear: number;
+  auraFar: number;
 }
 
 export const DEFAULT_THEME: DotMindTheme = {
@@ -18,6 +20,8 @@ export const DEFAULT_THEME: DotMindTheme = {
   fontFamily: "System",
   fontSize: 15,
   shimmerSeconds: 2.4,
+  auraNear: 0.55,
+  auraFar: 0.2,
 };
 
 export function resolveTheme(theme: Partial<DotMindTheme> | undefined): DotMindTheme {

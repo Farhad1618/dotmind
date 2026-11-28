@@ -1,6 +1,6 @@
 {
   "name": "dotmind-native",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dot-matrix AI status indicators for React Native that follow what the model is doing: reasoning, calling tools, writing. Drawn with Skia at 60 fps.",
   "license": "MIT",
   "repository": {
@@ -48,7 +48,7 @@
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
-    "dotmind": "^0.1.0"
+    "dotmind": "^0.2.0"
   },
   "peerDependencies": {
     "@shopify/react-native-skia": ">=2.0.0",

@@ -1,4 +1,5 @@
 import { Canvas, Picture, Skia, type SkPicture } from "@shopify/react-native-skia";
+import type { Shape } from "dotmind";
 import { useEffect, useMemo } from "react";
 import { View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
@@ -24,20 +25,21 @@ function blankPicture(): SkPicture {
 export interface DotMatrixProps {
   driver: MatrixDriver;
   size: number;
+  shape: Shape;
   still: boolean;
   paused: boolean;
   theme: DotMindTheme;
 }
 
-export function DotMatrix({ driver, size, still, paused, theme }: DotMatrixProps) {
+export function DotMatrix({ driver, size, shape, still, paused, theme }: DotMatrixProps) {
   const picture = useSharedValue<SkPicture>(blankPicture());
-  const well = useMemo(() => wellStyle(size, theme), [size, theme]);
+  const well = useMemo(() => wellStyle(size, theme, shape), [size, theme, shape]);
   const canvas = useMemo(() => ({ width: size, height: size }), [size]);
 
   useAppStatePause();
 
   useEffect(() => {
-    const painter = new SkiaPainter(matrixGeometry(size), (next) => {
+    const painter = new SkiaPainter(matrixGeometry(size, shape), (next) => {
       picture.value = next;
     });
     driver.attach(painter);
@@ -47,7 +49,7 @@ export function DotMatrix({ driver, size, still, paused, theme }: DotMatrixProps
       driver.detach();
       painter.dispose();
     };
-  }, [driver, size, picture]);
+  }, [driver, size, shape, picture]);
 
   useEffect(() => {
     driver.setVisible(!paused);

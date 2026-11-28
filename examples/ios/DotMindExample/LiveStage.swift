@@ -2,11 +2,12 @@ import DotMind
 import SwiftUI
 
 struct LiveStage: View {
+    let look: Look
     @StateObject private var turn = AgentTurn()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            DotMindView(tracker: turn.tracker, size: 56)
+            DotMindView(tracker: turn.tracker, size: 56, look: look)
                 .dotMindTheme(DotMindTheme(fontSize: 24))
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "What the dots showed")

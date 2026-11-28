@@ -17,6 +17,10 @@ public struct DotMindView: View {
         labels: [LabelKey: String] = [:],
         palette: [SceneName: RGB] = [:],
         scene: SceneName? = nil,
+        look: Look = .classic,
+        shape: DotShape? = nil,
+        scenes: [SceneKey: SceneName] = [:],
+        aura: Bool? = nil,
         reducedMotion: Bool? = nil
     ) {
         source = .activity(activity)
@@ -27,6 +31,10 @@ public struct DotMindView: View {
             labels: labels,
             palette: palette,
             scene: scene,
+            look: look,
+            shape: shape,
+            scenes: scenes,
+            aura: aura,
             reducedMotion: reducedMotion
         )
     }
@@ -39,6 +47,10 @@ public struct DotMindView: View {
         labels: [LabelKey: String] = [:],
         palette: [SceneName: RGB] = [:],
         scene: SceneName? = nil,
+        look: Look = .classic,
+        shape: DotShape? = nil,
+        scenes: [SceneKey: SceneName] = [:],
+        aura: Bool? = nil,
         reducedMotion: Bool? = nil
     ) {
         source = .tracker(tracker)
@@ -49,6 +61,10 @@ public struct DotMindView: View {
             labels: labels,
             palette: palette,
             scene: scene,
+            look: look,
+            shape: shape,
+            scenes: scenes,
+            aura: aura,
             reducedMotion: reducedMotion
         )
     }

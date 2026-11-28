@@ -46,6 +46,9 @@ const List<Activity> _states = [
   Activity(Phase.tool, tool: 'read_file'),
   Activity(Phase.tool, tool: 'run_sql'),
   Activity(Phase.tool, tool: 'calculate_margin'),
+  Activity(Phase.tool, tool: 'translate_text'),
+  Activity(Phase.tool, tool: 'deploy_service'),
+  Activity(Phase.tool, tool: 'set_breakpoint'),
   Activity(Phase.tool, tool: 'get_weather'),
   Activity(Phase.writing),
   Activity(Phase.waiting, tool: 'deploy_config'),
@@ -64,6 +67,16 @@ const List<Scene> _ambient = [
   Scene.halo,
 ];
 
+const List<Scene> _iconScenes = [Scene.neural, Scene.magnifier, Scene.glyph, Scene.sort, Scene.rocket, Scene.verified];
+
+const List<Scene> _pixelScenes = [Scene.bug, Scene.blocks, Scene.scan];
+
+const Map<Look, String> _lookBlurbs = {
+  Look.classic: 'Round dots, no glow. The scenes the indicator started with.',
+  Look.icons: 'Pictures for the big moments: a firing network while it thinks, a magnifier while it searches.',
+  Look.pixel: 'Square cells and arcade sprites: a bug while it debugs, falling blocks while code runs.',
+};
+
 String _describe(Activity activity) {
   final tool = activity.tool;
   return tool == null ? 'phase="${activity.phase.name}"' : 'phase="${activity.phase.name}" tool="$tool"';
@@ -81,8 +94,15 @@ class DotMindGallery extends StatelessWidget {
   );
 }
 
-class GalleryPage extends StatelessWidget {
+class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key});
+
+  @override
+  State<GalleryPage> createState() => _GalleryPageState();
+}
+
+class _GalleryPageState extends State<GalleryPage> {
+  Look _look = Look.classic;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -102,7 +122,9 @@ class GalleryPage extends StatelessWidget {
           children: [
             const _Header(),
             const SizedBox(height: 32),
-            const LiveTurn(),
+            _LookSwitch(look: _look, onChanged: (look) => setState(() => _look = look)),
+            const SizedBox(height: 18),
+            LiveTurn(look: _look),
             const SizedBox(height: 48),
             const _Section(
               title: 'Every state',
@@ -113,7 +135,32 @@ class GalleryPage extends StatelessWidget {
                 for (final activity in _states)
                   _Cell(
                     caption: _describe(activity),
-                    child: DotMind(activity: activity, size: 34),
+                    child: DotMind(activity: activity, look: _look, size: 34),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 48),
+            const _Section(
+              title: 'Icons',
+              blurb: 'The scenes of the icons look, with the aura glowing in each scene colour.',
+            ),
+            _CellGrid(
+              children: [
+                for (final scene in _iconScenes)
+                  _Cell(
+                    caption: 'scene="${scene.name}"',
+                    child: DotMind(scene: scene, look: Look.icons, label: _labelFor(scene), size: 34),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 48),
+            const _Section(title: 'Pixel', blurb: 'The scenes of the pixel look, drawn in square cells.'),
+            _CellGrid(
+              children: [
+                for (final scene in _pixelScenes)
+                  _Cell(
+                    caption: 'scene="${scene.name}"',
+                    child: DotMind(scene: scene, look: Look.pixel, label: _labelFor(scene), size: 34),
                   ),
               ],
             ),
@@ -147,6 +194,42 @@ class GalleryPage extends StatelessWidget {
         ),
       ),
     ),
+  );
+}
+
+String _labelFor(Scene scene) => switch (scene) {
+  Scene.neural => 'Thinking',
+  Scene.magnifier || Scene.scan => 'Searching',
+  Scene.glyph => 'Translating',
+  Scene.sort => 'Calculating',
+  Scene.rocket => 'Deploying',
+  Scene.verified => 'Done',
+  Scene.bug => 'Debugging',
+  Scene.blocks => 'Running code',
+  _ => scene.name,
+};
+
+class _LookSwitch extends StatelessWidget {
+  const _LookSwitch({required this.look, required this.onChanged});
+
+  final Look look;
+  final ValueChanged<Look> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text('LOOK', style: _eyebrow),
+      const SizedBox(height: 12),
+      SegmentedButton<Look>(
+        segments: [for (final look in Look.values) ButtonSegment(value: look, label: Text(look.name))],
+        selected: {look},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) => onChanged(selection.single),
+      ),
+      const SizedBox(height: 10),
+      Text(_lookBlurbs[look]!, style: _body),
+    ],
   );
 }
 
@@ -257,6 +340,8 @@ List<_Beat> _script() {
     for (var i = 0; i < 10; i++) (tick, const AgentEvent.thinking(chars: 24)),
     (const Duration(milliseconds: 200), const AgentEvent.tool('bash', id: 'code')),
     (const Duration(milliseconds: 2800), const AgentEvent.toolResult(id: 'code')),
+    (const Duration(milliseconds: 200), const AgentEvent.tool('deploy_service', id: 'deploy')),
+    (const Duration(milliseconds: 2800), const AgentEvent.toolResult(id: 'deploy')),
     for (var i = 0; i < 48; i++) (const Duration(milliseconds: 70), const AgentEvent.text(chars: 18)),
     (const Duration(milliseconds: 200), const AgentEvent.finish()),
     (const Duration(milliseconds: 3200), null),
@@ -264,7 +349,9 @@ List<_Beat> _script() {
 }
 
 class LiveTurn extends StatefulWidget {
-  const LiveTurn({super.key});
+  const LiveTurn({super.key, this.look = Look.classic});
+
+  final Look look;
 
   @override
   State<LiveTurn> createState() => _LiveTurnState();
@@ -331,6 +418,7 @@ class _LiveTurnState extends State<LiveTurn> {
           const SizedBox(height: 18),
           DotMind(
             tracker: _tracker,
+            look: widget.look,
             size: 56,
             style: const DotMindStyle(textStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.w500, height: 1.2)),
           ),

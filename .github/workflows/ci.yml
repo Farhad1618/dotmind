@@ -51,8 +51,15 @@ jobs:
         with:
           node-version: 24.x
           cache: npm
-          cache-dependency-path: packages/react-native/package-lock.json
-      - run: npm ci
+          cache-dependency-path: |
+            packages/dotmind/package-lock.json
+            packages/react-native/package-lock.json
+      - name: Build the local dotmind core
+        working-directory: packages/dotmind
+        run: |
+          npm ci
+          npm run build
+      - run: npm run link:core
       - run: npm run typecheck
       - run: npm test
 

@@ -18,6 +18,12 @@ private val RULES: List<Pair<ToolKind, List<String>>> = listOf(
         "dir",
     ),
     ToolKind.COMPUTE to listOf("calc", "math", "compute", "sum", "stat", "analy", "chart", "plot", "forecast"),
+    ToolKind.TRANSLATE to listOf(
+        "translate", "translation", "translator", "i18n", "localize", "localise", "localization", "localisation",
+        "l10n", "locale",
+    ),
+    ToolKind.DEPLOY to listOf("deploy", "deployment", "release", "publish", "rollout", "ship", "kubectl", "helm"),
+    ToolKind.DEBUG to listOf("debug", "debugger", "breakpoint", "stacktrace", "traceback", "inspect"),
 )
 
 private val CAMEL_BOUNDARY = Regex("([a-z0-9])([A-Z])")

@@ -51,3 +51,49 @@ void trail(Float32List out, List<int> path, double head, int length, double deca
     if (out[i] < v) out[i] = v;
   }
 }
+
+typedef Cell = (int, int);
+
+double mod(double a, double n) => ((a % n) + n) % n;
+
+List<Cell> bitmap(List<String> rows) => List.unmodifiable([
+  for (var y = 0; y < rows.length; y++)
+    for (var x = 0; x < rows[y].length; x++)
+      if (rows[y][x] == '#') (x, y),
+]);
+
+void light(Float32List out, int x, int y, double v) {
+  if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+  final i = cellAt(x, y);
+  if (v > out[i]) out[i] = v;
+}
+
+void lightCells(Float32List out, List<Cell> cells, double v) {
+  for (final (x, y) in cells) {
+    light(out, x, y, v);
+  }
+}
+
+List<Cell> line(Cell a, Cell b) {
+  final cells = <Cell>[];
+  var (x0, y0) = a;
+  final (x1, y1) = b;
+  final dx = (x1 - x0).abs();
+  final dy = -(y1 - y0).abs();
+  final sx = x0 < x1 ? 1 : -1;
+  final sy = y0 < y1 ? 1 : -1;
+  var err = dx + dy;
+  while (true) {
+    cells.add((x0, y0));
+    if (x0 == x1 && y0 == y1) return List.unmodifiable(cells);
+    final e2 = 2 * err;
+    if (e2 >= dy) {
+      err += dy;
+      x0 += sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}

@@ -5,19 +5,19 @@ import '../core/patterns/grid.dart';
 
 const int _levels = 128;
 const double _maxValue = 1.5;
-const double _baseAlpha = 0.14;
 
 double _whiteness(double v) => clampTo((v - 0.85) / 0.55, 0, 1);
 
 double _levelValue(int level) => level * _maxValue / (_levels - 1);
 
 final class DotPaintTable {
-  DotPaintTable() {
+  DotPaintTable({this.baseAlpha = 0.14}) {
     for (var q = 0; q < _levels; q++) {
       _scale[q] = 1 + _whiteness(_levelValue(q)) * 0.12;
     }
   }
 
+  final double baseAlpha;
   final Float64List _scale = Float64List(_levels);
   final List<MaskFilter?> _blur = List<MaskFilter?>.filled(_levels, null);
   final List<Color?> _glow = List<Color?>.filled(_levels, null);
@@ -44,7 +44,7 @@ final class DotPaintTable {
     _g = g;
     _b = b;
     _generation++;
-    _base = Color.fromARGB((_baseAlpha * 255 + 0.5).floor(), r, g, b);
+    _base = Color.fromARGB((baseAlpha * 255 + 0.5).floor(), r, g, b);
   }
 
   int levelFor(double v) =>

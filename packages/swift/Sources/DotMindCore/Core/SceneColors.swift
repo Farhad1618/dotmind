@@ -18,6 +18,15 @@ extension SceneName {
         case .orbit: RGB(61, 123, 255)
         case .serpent: RGB(154, 107, 255)
         case .pulse: RGB(255, 122, 26)
+        case .neural: RGB(150, 104, 255)
+        case .magnifier: RGB(64, 196, 236)
+        case .glyph: RGB(255, 214, 64)
+        case .sort: RGB(255, 120, 32)
+        case .rocket: RGB(236, 72, 196)
+        case .verified: RGB(64, 214, 140)
+        case .bug: RGB(72, 164, 255)
+        case .blocks: RGB(255, 150, 40)
+        case .scan: RGB(255, 82, 72)
         }
     }
 }

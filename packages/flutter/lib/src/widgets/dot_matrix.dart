@@ -3,11 +3,15 @@ import 'dart:math' as math;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../core/cell_shape.dart';
 import 'dot_matrix_controller.dart';
 import 'dot_matrix_painter.dart';
 import 'viewport_visibility.dart';
 
 const double _maxFrameSeconds = 0.05;
+
+BorderRadius wellRadius(CellShape shape, double side) =>
+    BorderRadius.circular(side * (shape == CellShape.square ? 0.14 : 0.24));
 
 bool _isForeground(AppLifecycleState? state) => switch (state) {
   null || AppLifecycleState.resumed || AppLifecycleState.inactive => true,
@@ -15,11 +19,19 @@ bool _isForeground(AppLifecycleState? state) => switch (state) {
 };
 
 class DotMatrix extends StatefulWidget {
-  const DotMatrix({super.key, required this.controller, required this.size, required this.well, this.still = false});
+  const DotMatrix({
+    super.key,
+    required this.controller,
+    required this.size,
+    required this.well,
+    this.shape = CellShape.dot,
+    this.still = false,
+  });
 
   final DotMatrixController controller;
   final double size;
   final Color well;
+  final CellShape shape;
   final bool still;
 
   @override
@@ -39,7 +51,7 @@ class _DotMatrixState extends State<DotMatrix> with SingleTickerProviderStateMix
     super.initState();
     _foreground = _isForeground(WidgetsBinding.instance.lifecycleState);
     _lifecycle = AppLifecycleListener(onStateChange: _onLifecycle);
-    _painter = DotMatrixPainter(widget.controller);
+    _painter = DotMatrixPainter(widget.controller, shape: widget.shape);
     widget.controller.attach(_isLive);
     _visibility.addListener(_sync);
     _sync();
@@ -57,7 +69,9 @@ class _DotMatrixState extends State<DotMatrix> with SingleTickerProviderStateMix
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller.detach();
       widget.controller.attach(_isLive);
-      _painter = DotMatrixPainter(widget.controller);
+    }
+    if (oldWidget.controller != widget.controller || oldWidget.shape != widget.shape) {
+      _painter = DotMatrixPainter(widget.controller, shape: widget.shape);
     }
     _sync();
   }
@@ -101,7 +115,7 @@ class _DotMatrixState extends State<DotMatrix> with SingleTickerProviderStateMix
     _visibility.scheduleCheck(context);
     final side = widget.size;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(side * 0.24),
+      borderRadius: wellRadius(widget.shape, side),
       child: ColoredBox(
         color: widget.well,
         child: RepaintBoundary(

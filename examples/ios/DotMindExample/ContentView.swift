@@ -1,16 +1,32 @@
+import DotMind
 import SwiftUI
 
 struct ContentView: View {
+    @State private var look: Look = .classic
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 40) {
                 header
-                LiveStage()
+                LookPicker(look: $look)
+                LiveStage(look: look)
                 PageSection(
                     title: "Every state",
                     detail: "The tool's name decides the picture: web_search sweeps, run_sql lights disks, bash types between brackets."
                 ) {
-                    Gallery(items: GalleryItem.states)
+                    Gallery(items: GalleryItem.states, look: look)
+                }
+                PageSection(
+                    title: "Icons",
+                    detail: "look: .icons draws small pictures with a soft aura in the scene's colour."
+                ) {
+                    Gallery(items: GalleryItem.icons)
+                }
+                PageSection(
+                    title: "Pixel",
+                    detail: "look: .pixel swaps round dots for square pixels and plays little 8-bit scenes."
+                ) {
+                    Gallery(items: GalleryItem.pixels)
                 }
                 PageSection(
                     title: "The original eight",
@@ -53,6 +69,23 @@ struct ContentView: View {
         )
         .background(Palette.stage)
         .ignoresSafeArea()
+    }
+}
+
+private struct LookPicker: View {
+    @Binding var look: Look
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow(text: "Look")
+            Picker("Look", selection: $look) {
+                ForEach(Look.allCases, id: \.self) { look in
+                    Text(look.rawValue.capitalized).tag(look)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 360)
+        }
     }
 }
 

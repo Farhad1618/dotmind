@@ -1,7 +1,7 @@
-import { BlurStyle, Skia, type SkMaskFilter, type SkPaint, type SkPicture, type SkRect } from "@shopify/react-native-skia";
+import { BlurStyle, Skia, type SkCanvas, type SkMaskFilter, type SkPaint, type SkPicture, type SkRect } from "@shopify/react-native-skia";
 import type { RGB } from "dotmind";
-import { BASE_ALPHA, createDotLook, GLOW_LEVELS, glowLevel, glowRadius, lookAt } from "./dotLook.ts";
-import { CELLS, type MatrixGeometry } from "./geometry.ts";
+import { createDotLook, GLOW_LEVELS, glowLevel, glowRadius, lookAt } from "./dotLook.ts";
+import { cellBox, CELLS, createCellBox, type MatrixGeometry } from "./geometry.ts";
 import type { MatrixPainter } from "./painter.ts";
 
 function antialiased(): SkPaint {
@@ -10,10 +10,10 @@ function antialiased(): SkPaint {
   return paint;
 }
 
-function glowFilters(radius: number): SkMaskFilter[] {
+function glowFilters(half: number): SkMaskFilter[] {
   const filters: SkMaskFilter[] = [];
   for (let level = 0; level <= GLOW_LEVELS; level++) {
-    filters.push(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, glowRadius(radius, level / GLOW_LEVELS) / 2, true));
+    filters.push(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, glowRadius(half, level / GLOW_LEVELS) / 2, true));
   }
   return filters;
 }
@@ -28,29 +28,30 @@ export class SkiaPainter implements MatrixPainter {
   private readonly dotPaint = antialiased();
   private readonly ink = new Float32Array(4);
   private readonly look = createDotLook();
+  private readonly box = createCellBox();
   private readonly glows: SkMaskFilter[];
 
   constructor(geometry: MatrixGeometry, publish: (picture: SkPicture) => void) {
     this.geometry = geometry;
     this.publish = publish;
     this.bounds = Skia.XYWHRect(0, 0, geometry.size, geometry.size);
-    this.glows = glowFilters(geometry.radius);
+    this.glows = glowFilters(geometry.half);
   }
 
   paint(values: Float32Array, color: RGB): void {
-    const { xs, ys, radius } = this.geometry;
+    const { xs, ys, half, base } = this.geometry;
     const look = this.look;
     const canvas = this.recorder.beginRecording(this.bounds);
-    this.tint(this.basePaint, color[0] | 0, color[1] | 0, color[2] | 0, BASE_ALPHA);
-    for (let i = 0; i < CELLS; i++) canvas.drawCircle(xs[i], ys[i], radius, this.basePaint);
+    this.tint(this.basePaint, color[0] | 0, color[1] | 0, color[2] | 0, base);
+    for (let i = 0; i < CELLS; i++) this.cell(canvas, xs[i], ys[i], half, this.basePaint);
     for (let i = 0; i < CELLS; i++) {
-      if (!lookAt(values[i], color, radius, look)) continue;
-      const r = radius * look.radiusScale;
+      if (!lookAt(values[i], color, half, look)) continue;
+      const h = half * look.radiusScale;
       this.tint(this.glowPaint, color[0] | 0, color[1] | 0, color[2] | 0, look.alpha);
       this.glowPaint.setMaskFilter(this.glows[glowLevel(look.heat)]);
-      canvas.drawCircle(xs[i], ys[i], r, this.glowPaint);
+      this.cell(canvas, xs[i], ys[i], h, this.glowPaint);
       this.tint(this.dotPaint, look.red, look.green, look.blue, look.alpha);
-      canvas.drawCircle(xs[i], ys[i], r, this.dotPaint);
+      this.cell(canvas, xs[i], ys[i], h, this.dotPaint);
     }
     this.publish(this.recorder.finishRecordingAsPicture());
   }
@@ -61,6 +62,11 @@ export class SkiaPainter implements MatrixPainter {
     this.glowPaint.dispose();
     this.dotPaint.dispose();
     this.recorder.dispose();
+  }
+
+  private cell(canvas: SkCanvas, x: number, y: number, half: number, paint: SkPaint): void {
+    if (this.geometry.shape === "square") canvas.drawRRect(cellBox(x, y, half, this.geometry.corner, this.box), paint);
+    else canvas.drawCircle(x, y, half, paint);
   }
 
   private tint(paint: SkPaint, red: number, green: number, blue: number, alpha: number): void {

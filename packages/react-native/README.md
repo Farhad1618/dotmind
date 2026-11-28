@@ -40,10 +40,32 @@ function Examples() {
       <DotMind activity={{ phase: "tool", tool: "web_search" }} />
       <DotMind activity="writing" variant="bare" size={18} />
       <DotMind scene="ember" label="Thinking" />
+      <DotMind activity={{ phase: "tool", tool: "deploy_service" }} look="icons" />
+      <DotMind activity={{ phase: "tool", tool: "debug_trace" }} look="pixel" />
     </>
   );
 }
 ```
+
+### Looks
+
+A look re-skins every state at once. It picks the scenes, the cell shape and whether the pill glows.
+
+| Look | Scenes | Shape | Aura |
+|---|---|---|---|
+| `classic` | the original scenes | dot | off |
+| `icons` | thinking → `neural`, done → `verified`, search → `magnifier`, translate → `glyph`, compute → `sort`, deploy → `rocket` | dot | on |
+| `pixel` | debug → `bug`, code → `blocks`, search → `scan` | square | off |
+
+States a look does not list keep their classic scene. An unknown look falls back to `classic`. `shape` and `aura` override the look, and `scenes` overrides single states by scene key (the phase, or `tool:<kind>`):
+
+```tsx
+<DotMind tracker={tracker} look="pixel" aura />
+<DotMind tracker={tracker} look="icons" scenes={{ "tool:code": "blocks", writing: "pulse" }} />
+<DotMind tracker={tracker} shape="square" />
+```
+
+The scene is the first match of `scene`, then `scenes`, then the look, then the classic table. Square cells are rounded squares, 0.8 of the cell step with corners at 22% of the side, drawn at 20% base alpha, and the well's corners tighten from 24% to 14%. The aura is a soft glow in the current scene colour around the pill, or around the matrix well when `variant="bare"`. It cross-fades to each new scene colour over 0.35 s, and switches instantly under reduced motion.
 
 ### Anthropic SDK stream
 
@@ -122,9 +144,13 @@ tracker.push({ type: "finish" });
 | `labels` | English | Override any label, e.g. `{ "tool:search": "Buscando" }`. |
 | `palette` | | Recolour any scene: `{ radar: [0, 200, 120] }`. |
 | `scene` | from state | Force one scene, ignoring the state. |
+| `look` | `classic` | `classic`, `icons` or `pixel`. Picks the scenes, the cell shape and the aura. |
+| `shape` | from look | `dot` or `square` cells. |
+| `scenes` | | Override the scene for any state, e.g. `{ "tool:deploy": "rocket", thinking: "orbit" }`. |
+| `aura` | from look | Glow in the scene colour around the pill or the bare well. On for `icons`. |
 | `reducedMotion` | system setting | Show a still frame per state. |
 | `paused` | `false` | Stop the matrix and the shimmer while the indicator is off screen. |
-| `theme` | web defaults | `background`, `edge`, `well`, `ink`, `peak`, `fontFamily`, `fontSize`, `shimmerSeconds`. These match the web package's CSS custom properties. |
+| `theme` | web defaults | `background`, `edge`, `well`, `ink`, `peak`, `fontFamily`, `fontSize`, `shimmerSeconds`, `auraNear` (0.55), `auraFar` (0.2). These match the web package's CSS custom properties. |
 | `style`, other `View` props | | Passed to the outer view. |
 
 ## Behaviour
@@ -138,16 +164,16 @@ tracker.push({ type: "finish" });
 
 ## Developing in this repo
 
-`dotmind` is a regular dependency (`^0.1.0`). Locally, `package-lock.json` resolves it as a link to `../dotmind`, so build the core first:
+`dotmind` is a regular dependency (`^0.2.0`). Develop against the core in `../dotmind`: build it, then link it in with `npm run link:core`, which installs everything else from the lockfile and points `dotmind` at the local build without changing `package.json`:
 
 ```bash
-npm install --prefix ../dotmind && npm run build --prefix ../dotmind
-npm install
+npm ci --prefix ../dotmind && npm run build --prefix ../dotmind
+npm run link:core
 npm run typecheck
 npm test
 ```
 
-If the link is ever lost, `npm run link:core` restores it without changing `package.json`.
+CI does the same, so this package is tested against the core in the same commit. The Expo example in `examples/react-native` has its own `npm run link:core`.
 
 ## License
 

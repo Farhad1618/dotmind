@@ -17,6 +17,7 @@ class GoldenParityTest {
     fun everyFrameMatchesTheReference() {
         val frames = GoldenFixture.list("frames")
         assertEquals(Scene.entries.size * 8, frames.size)
+        assertEquals(Scene.entries.toSet(), frames.map { Scene.fromId(GoldenFixture.string(it, "scene")!!) }.toSet())
         val out = FloatArray(CELLS)
         for (frame in frames) {
             val scene = Scene.fromId(GoldenFixture.string(frame, "scene")!!)
@@ -29,7 +30,9 @@ class GoldenParityTest {
 
     @Test
     fun everyToolNameMapsToTheReferenceKind() {
-        for (entry in GoldenFixture.list("tools")) {
+        val tools = GoldenFixture.list("tools")
+        assertEquals(ToolKind.entries.toSet(), tools.map { ToolKind.fromId(GoldenFixture.string(it, "kind")!!) }.toSet())
+        for (entry in tools) {
             val name = GoldenFixture.string(entry, "name")!!
             assertEquals(ToolKind.fromId(GoldenFixture.string(entry, "kind")!!), classifyTool(name), name)
         }
@@ -37,7 +40,9 @@ class GoldenParityTest {
 
     @Test
     fun everyActivityPicksTheReferenceSceneAndLabel() {
-        for (entry in GoldenFixture.list("scenes")) {
+        val entries = GoldenFixture.list("scenes")
+        assertTrue(entries.size >= 17)
+        for (entry in entries) {
             val raw = entry.getValue("activity").jsonObject
             val activity = Activity(
                 phase = Phase.fromId(GoldenFixture.string(raw, "phase")!!),
@@ -46,6 +51,26 @@ class GoldenParityTest {
             )
             assertEquals(Scene.fromId(GoldenFixture.string(entry, "scene")!!), sceneFor(activity), activity.toString())
             assertEquals(GoldenFixture.string(entry, "label"), labelFor(activity), activity.toString())
+        }
+    }
+
+    @Test
+    fun everyLookPicksTheReferenceSceneAndLabel() {
+        val entries = GoldenFixture.list("looks")
+        assertEquals(Look.entries.size * SceneKey.entries.size, entries.size)
+        assertEquals(Look.entries.toSet(), entries.map { Look.fromId(GoldenFixture.string(it, "look")!!) }.toSet())
+        for (entry in entries) {
+            val raw = entry.getValue("activity").jsonObject
+            val activity = Activity(
+                phase = Phase.fromId(GoldenFixture.string(raw, "phase")!!),
+                tool = GoldenFixture.string(raw, "tool"),
+                kind = GoldenFixture.string(raw, "kind")?.let(ToolKind::fromId),
+            )
+            val look = Look.fromId(GoldenFixture.string(entry, "look")!!)
+            val where = "${look.id} $activity"
+            assertEquals(GoldenFixture.string(entry, "look"), look.id, where)
+            assertEquals(Scene.fromId(GoldenFixture.string(entry, "scene")!!), sceneFor(activity, look), where)
+            assertEquals(GoldenFixture.string(entry, "label"), labelFor(activity), where)
         }
     }
 

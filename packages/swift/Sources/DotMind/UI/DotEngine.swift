@@ -18,7 +18,7 @@ final class DotEngine: ObservableObject {
         apply(frame)
         advance(to: frame.date, still: frame.still)
         renderer.sample(into: &values)
-        painter.paint(values, color: renderer.color, in: &context, size: size)
+        painter.paint(values, color: renderer.color, shape: frame.shape, in: &context, size: size)
         drawn = true
     }
 

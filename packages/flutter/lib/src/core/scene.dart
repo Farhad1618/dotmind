@@ -16,4 +16,13 @@ enum Scene {
   orbit,
   serpent,
   pulse,
+  neural,
+  magnifier,
+  glyph,
+  sort,
+  rocket,
+  verified,
+  bug,
+  blocks,
+  scan,
 }

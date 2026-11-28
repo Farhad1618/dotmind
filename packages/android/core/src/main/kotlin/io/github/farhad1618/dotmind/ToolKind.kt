@@ -7,6 +7,9 @@ public enum class ToolKind(public val id: String) {
     FILE("file"),
     DATABASE("database"),
     COMPUTE("compute"),
+    TRANSLATE("translate"),
+    DEPLOY("deploy"),
+    DEBUG("debug"),
     GENERIC("generic");
 
     public companion object {

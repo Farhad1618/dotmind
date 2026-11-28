@@ -44,7 +44,19 @@ DotMindView(activity: .thinking)
 DotMindView(activity: .using("web_search"))
 DotMindView(activity: .writing, variant: .bare, size: 18)
 DotMindView(activity: .thinking, label: .text("Thinking"), scene: .ember)
+DotMindView(tracker: tracker, look: .icons)
+DotMindView(tracker: tracker, look: .pixel, scenes: [.thinking: .scan])
 ```
+
+Scene order: `scene` first, then `scenes`, then the look's table, then the classic table. `Look.named(_:)` reads a look from a string and falls back to `.classic` for anything it does not know.
+
+| look | differs from classic | shape | aura |
+|---|---|---|---|
+| `.classic` | | dot | off |
+| `.icons` | thinking → `neural`, done → `verified`, search → `magnifier`, translate → `glyph`, compute → `sort`, deploy → `rocket` | dot | on |
+| `.pixel` | debug → `bug`, code → `blocks`, search → `scan` | square | off |
+
+Tool kinds: `search`, `browse`, `code`, `file`, `database`, `compute`, `translate`, `deploy`, `debug`, `generic`.
 
 ## Following an Anthropic stream
 
@@ -104,15 +116,19 @@ tracker.push(.finish())
 | `labels` | English | Override any label, e.g. `[.tool(.search): "Buscando"]`. |
 | `palette` | | Recolour any scene: `[.radar: RGB(0, 200, 120)]`. |
 | `scene` | from state | Force one scene, ignoring the state. |
+| `look` | `.classic` | `.classic`, `.icons` (small pictures with an aura) or `.pixel` (square pixels, 8-bit scenes). |
+| `shape` | from look | `.dot` or `.square`. Overrides the look's shape. |
+| `scenes` | | Pick the scene per state, e.g. `[.thinking: .orbit, .tool(.deploy): .rocket]`. |
+| `aura` | from look | Soft glow in the scene colour around the pill, or the matrix when bare. On for `.icons`. |
 | `reducedMotion` | system setting | Show a still frame per state. |
 
-Colours, font and shimmer speed come from `.dotMindTheme(DotMindTheme(...))`.
+Colours, font, shimmer speed and aura strength (`auraNear`, `auraFar`) come from `.dotMindTheme(DotMindTheme(...))`.
 
 The matrix is drawn in a `Canvas` inside `TimelineView(.animation)`. The timeline pauses when Reduce Motion is on, when the view is removed from the hierarchy (or not yet loaded in a lazy container) and when the app is in the background. A view in a plain `ScrollView` that is scrolled out of sight stays in the hierarchy and keeps animating. The view is one accessibility element with the label as its accessibility label. When the label changes, VoiceOver hears it as a queued announcement on every platform, watchOS included, so it says "Searching" once instead of reading every frame.
 
 ## Core without SwiftUI
 
-`import DotMindCore`. `classifyTool`, `labelFor`, `sceneFor`, `SceneName.render(at:into:context:)` and `DotRenderer` are plain Swift with no UI imports. You can use them to draw the matrix in another renderer.
+`import DotMindCore`. `classifyTool`, `labelFor`, `sceneFor(_:look:overrides:)`, `sceneKey`, `Look`, `DotShape`, `SceneName.render(at:into:context:)` and `DotRenderer` are plain Swift with no UI imports. You can use them to draw the matrix in another renderer.
 
 ## Tests
 

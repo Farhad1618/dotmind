@@ -13,6 +13,9 @@ public val DEFAULT_LABELS: Map<LabelKey, String> = mapOf(
     LabelKey.TOOL_FILE to "Reading files",
     LabelKey.TOOL_DATABASE to "Querying data",
     LabelKey.TOOL_COMPUTE to "Calculating",
+    LabelKey.TOOL_TRANSLATE to "Translating",
+    LabelKey.TOOL_DEPLOY to "Deploying",
+    LabelKey.TOOL_DEBUG to "Debugging",
     LabelKey.TOOL_GENERIC to "Using a tool",
 )
 

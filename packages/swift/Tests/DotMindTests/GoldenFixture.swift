@@ -21,6 +21,13 @@ struct GoldenFixture: Decodable {
         var label: String
     }
 
+    struct LookCase: Decodable {
+        var activity: Activity
+        var look: String
+        var scene: String
+        var label: String
+    }
+
     struct EnergySample: Decodable {
         var frame: Int
         var energy: Double
@@ -31,6 +38,7 @@ struct GoldenFixture: Decodable {
     var frames: [Frame]
     var tools: [Tool]
     var scenes: [SceneCase]
+    var looks: [LookCase]
     var energy: [EnergySample]
 
     static func load(filePath: String = #filePath) throws -> GoldenFixture {

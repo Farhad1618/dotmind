@@ -1,10 +1,10 @@
-import { labelFor, type LabelMap } from "./labels.ts";
-import { SCENE_COLORS } from "./patterns.ts";
+import { labelFor } from "./labels.ts";
+import { lookDefinition } from "./looks.ts";
+import { GRID, SCENE_COLORS } from "./patterns.ts";
 import { DotRenderer } from "./renderer.ts";
 import { sceneFor } from "./scene.ts";
-import { GRID } from "./patterns.ts";
-import type { Activity, DotMindOptions, Phase, RGB } from "./types.ts";
-
+import { shapeGeometry, traceCell } from "./shapes.ts";
+import type { Activity, DotMindOptions, Phase, Shape } from "./types.ts";
 
 export type { DotMindOptions };
 
@@ -17,8 +17,11 @@ export interface DotMindController {
 
 export const DOTMIND_CSS = `
 .dm{display:inline-flex;align-items:center;gap:.6em;font:500 var(--dm-font-size,15px)/1.2 var(--dm-font,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif);vertical-align:middle;max-width:100%}
-.dm--pill{padding:.35em 1.15em .35em .35em;border-radius:999px;background:var(--dm-bg,#0b0b0c);box-shadow:inset 0 0 0 1px var(--dm-edge,#26262a),0 10px 30px -14px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04)}
-.dm-well{display:block;flex:none;border-radius:24%;background:var(--dm-well,#050506)}
+.dm--pill{padding:.35em 1.15em .35em .35em;border-radius:999px;background:var(--dm-bg,#0b0b0c);box-shadow:inset 0 0 0 1px var(--dm-edge,#26262a),0 10px 30px -14px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04),0 0 24px -6px rgba(var(--dm-aura,0,0,0),0),0 0 72px 8px rgba(var(--dm-aura,0,0,0),0);transition:box-shadow .35s ease}
+.dm--pill.dm--aura{box-shadow:inset 0 0 0 1px var(--dm-edge,#26262a),0 10px 30px -14px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04),0 0 24px -6px rgba(var(--dm-aura),var(--dm-aura-near,.55)),0 0 72px 8px rgba(var(--dm-aura),var(--dm-aura-far,.2))}
+.dm-well{display:block;flex:none;border-radius:24%;background:var(--dm-well,#050506);transition:box-shadow .35s ease}
+.dm--square .dm-well{border-radius:14%}
+.dm--bare.dm--aura .dm-well{box-shadow:0 0 18px 2px rgba(var(--dm-aura),var(--dm-aura-near,.55))}
 .dm-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:linear-gradient(100deg,var(--dm-ink,#8a8a92) 0%,var(--dm-ink,#8a8a92) 38%,var(--dm-peak,#fff) 47%,var(--dm-glow,#fff) 52%,var(--dm-ink,#8a8a92) 62%,var(--dm-ink,#8a8a92) 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:dm-shimmer var(--dm-shimmer,2.4s) linear infinite;transition:opacity .2s}
 .dm[data-phase=idle] .dm-label,.dm[data-phase=done] .dm-label,.dm[data-phase=error] .dm-label{animation:none;background-position:100% 0}
 .dm-label[hidden]{display:none}
@@ -47,22 +50,20 @@ export function drawMatrix(
   px: number,
   values: Float32Array,
   rgb: [number, number, number],
-  base = 0.14,
+  base?: number,
+  shape: Shape = "dot",
 ): void {
   renderer.sample(values);
   const [r, g, b] = renderer.color(rgb);
   const pad = px * 0.12;
   const step = (px - pad * 2) / (GRID - 1);
-  const rad = step * 0.34;
+  const half = (step * shapeGeometry(shape).size) / 2;
   ctx.clearRect(0, 0, px, px);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${base})`;
+  ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${base ?? shapeGeometry(shape).base})`;
   ctx.beginPath();
   for (let i = 0; i < CELLS; i++) {
-    const x = pad + (i % GRID) * step;
-    const y = pad + Math.floor(i / GRID) * step;
-    ctx.moveTo(x + rad, y);
-    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    traceCell(ctx, pad + (i % GRID) * step, pad + Math.floor(i / GRID) * step, half, shape);
   }
   ctx.fill();
   for (let i = 0; i < CELLS; i++) {
@@ -73,10 +74,10 @@ export function drawMatrix(
     const w = clamp((v - 0.85) / 0.55, 0, 1);
     const a = clamp(v, 0, 1);
     ctx.shadowColor = `rgba(${r | 0},${g | 0},${b | 0},${a})`;
-    ctx.shadowBlur = rad * (1.5 + w * 2.5);
+    ctx.shadowBlur = half * (1.5 + w * 2.5);
     ctx.fillStyle = `rgba(${(r + (255 - r) * w) | 0},${(g + (255 - g) * w) | 0},${(b + (255 - b) * w) | 0},${a})`;
     ctx.beginPath();
-    ctx.arc(x, y, rad * (1 + w * 0.12), 0, Math.PI * 2);
+    traceCell(ctx, x, y, half * (1 + w * 0.12), shape);
     ctx.fill();
   }
 }
@@ -89,6 +90,7 @@ interface Instance {
   still: boolean;
   values: Float32Array;
   rgb: [number, number, number];
+  shape: Shape;
 }
 
 const live = new Set<Instance>();
@@ -103,7 +105,7 @@ function loop(now: number) {
     if (!inst.visible || inst.still) continue;
     any = true;
     inst.renderer.step(dt);
-    drawMatrix(inst.renderer, inst.ctx, inst.px, inst.values, inst.rgb);
+    drawMatrix(inst.renderer, inst.ctx, inst.px, inst.values, inst.rgb, undefined, inst.shape);
   }
   frame = any || live.size ? requestAnimationFrame(loop) : 0;
   if (!frame) last = 0;
@@ -134,7 +136,7 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
   if (!ctx) throw new Error("dotmind needs a 2D canvas context");
   const reduce =
     opts.reducedMotion ?? (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const inst: Instance = { renderer: new DotRenderer(), ctx, px: 0, visible: true, still: reduce, values: new Float32Array(CELLS), rgb: [0, 0, 0] };
+  const inst: Instance = { renderer: new DotRenderer(), ctx, px: 0, visible: true, still: reduce, values: new Float32Array(CELLS), rgb: [0, 0, 0], shape: "dot" };
   let activity: Activity = { phase: "idle" };
   let drawn = false;
 
@@ -155,11 +157,15 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
     drawn = false;
-    root.className = opts.variant === "bare" ? "dm dm--bare" : "dm dm--pill";
+    const look = lookDefinition(opts.look);
+    inst.shape = opts.shape ?? look.shape;
+    const aura = opts.aura ?? look.aura;
+    root.className = `dm ${opts.variant === "bare" ? "dm--bare" : "dm--pill"}${aura ? " dm--aura" : ""}${inst.shape === "square" ? " dm--square" : ""}`;
+    root.dataset.look = opts.look ?? "classic";
   }
 
   function render() {
-    const scene = opts.scene ?? sceneFor(activity);
+    const scene = opts.scene ?? sceneFor(activity, opts.look, opts.scenes);
     const color = opts.palette?.[scene] ?? SCENE_COLORS[scene];
     inst.renderer.feed(activity.progress);
     inst.renderer.show(scene, color, !inst.visible || !drawn);
@@ -168,6 +174,7 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
     if (activity.tool) root.dataset.tool = activity.tool;
     else delete root.dataset.tool;
     const [r, g, b] = color;
+    root.style.setProperty("--dm-aura", `${r | 0},${g | 0},${b | 0}`);
     root.style.setProperty("--dm-glow", `rgb(${(r + 510) / 3 | 0},${(g + 510) / 3 | 0},${(b + 510) / 3 | 0})`);
     const text = opts.label === false ? "" : opts.label ?? labelFor(activity, opts.labels);
     label.hidden = !text;
@@ -177,7 +184,7 @@ export function mount(host: HTMLElement, options: DotMindOptions = {}, styleRoot
       inst.renderer.step(1.2);
       inst.renderer.step(0.5);
     }
-    if (inst.still || !drawn || !inst.visible) drawMatrix(inst.renderer, ctx!, inst.px, inst.values, inst.rgb);
+    if (inst.still || !drawn || !inst.visible) drawMatrix(inst.renderer, ctx!, inst.px, inst.values, inst.rgb, undefined, inst.shape);
     drawn = true;
   }
 

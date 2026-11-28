@@ -10,6 +10,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import io.github.farhad1618.dotmind.Activity
 import io.github.farhad1618.dotmind.DotGeometry
 import io.github.farhad1618.dotmind.DotRenderer
+import io.github.farhad1618.dotmind.DotShape
 import io.github.farhad1618.dotmind.IndicatorDriver
 import io.github.farhad1618.dotmind.Phase
 import io.github.farhad1618.dotmind.Rgb
@@ -21,6 +22,7 @@ internal class IndicatorHost(private val driver: IndicatorDriver = IndicatorDriv
     val renderer: DotRenderer get() = driver.renderer
     val values: FloatArray = FloatArray(CELLS)
     val color: DoubleArray = DoubleArray(3)
+    val auraColor: DoubleArray = DoubleArray(3)
 
     var frame: Long by mutableLongStateOf(0L)
         private set
@@ -35,16 +37,22 @@ internal class IndicatorHost(private val driver: IndicatorDriver = IndicatorDriv
         private set
     var phase: Phase by mutableStateOf(Phase.IDLE)
         private set
+    var shape: DotShape by mutableStateOf(DotShape.DOT)
+        private set
+    var aura: Boolean by mutableStateOf(false)
+        private set
     var glow: Rgb by mutableStateOf(DotGeometry.glow(SceneColors[renderer.scene]))
         private set
 
     fun present(activity: Activity, options: DotMindOptions, still: Boolean) {
         Snapshot.withoutReadObservation {
             this.still = still
-            if (driver.present(activity, options.scene, options.palette, visible, still)) frame++
+            if (driver.present(activity, options.scene, options.palette, visible, still, options.look, options.scenes)) frame++
             label = options.visibleLabel(activity)
             description = options.spokenLabel(activity)
             phase = activity.phase
+            shape = options.shape
+            aura = options.aura
             glow = DotGeometry.glow(options.palette[driver.scene] ?: SceneColors[driver.scene])
         }
     }

@@ -2,7 +2,17 @@ import type { LabelMap } from "./labels.ts";
 
 export type Phase = "idle" | "thinking" | "tool" | "writing" | "waiting" | "error" | "done";
 
-export type ToolKind = "search" | "browse" | "code" | "file" | "database" | "compute" | "generic";
+export type ToolKind =
+  | "search"
+  | "browse"
+  | "code"
+  | "file"
+  | "database"
+  | "compute"
+  | "translate"
+  | "deploy"
+  | "debug"
+  | "generic";
 
 export type RGB = readonly [number, number, number];
 
@@ -32,7 +42,7 @@ export interface PatternContext {
 
 export type Pattern = (t: number, out: Float32Array, ctx: PatternContext) => void;
 
-export type SceneName =
+export type ClassicScene =
   | "breathe"
   | "comet"
   | "radar"
@@ -51,6 +61,20 @@ export type SceneName =
   | "serpent"
   | "pulse";
 
+export type IconScene = "neural" | "magnifier" | "glyph" | "sort" | "rocket" | "verified";
+
+export type PixelScene = "bug" | "blocks" | "scan";
+
+export type SceneName = ClassicScene | IconScene | PixelScene;
+
+export type Look = "classic" | "icons" | "pixel";
+
+export type Shape = "dot" | "square";
+
+export type SceneKey = Exclude<Phase, "tool"> | `tool:${ToolKind}`;
+
+export type SceneMap = Partial<Record<SceneKey, SceneName>>;
+
 export interface DotMindOptions {
   variant?: "pill" | "bare";
   size?: number;
@@ -58,5 +82,9 @@ export interface DotMindOptions {
   labels?: Partial<LabelMap>;
   palette?: Partial<Record<SceneName, RGB>>;
   scene?: SceneName;
+  look?: Look;
+  shape?: Shape;
+  scenes?: SceneMap;
+  aura?: boolean;
   reducedMotion?: boolean;
 }

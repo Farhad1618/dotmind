@@ -1,21 +1,28 @@
 import SwiftUI
 
 struct DotPainter {
-    private static let baseAlpha = 0.14
     private static let glowLevels = 16
 
     private var layoutSide: CGFloat = -1
+    private var layoutShape: DotShape = .dot
+    private var geometry = DotShape.dot.geometry
     private var basePath = Path()
     private var origin: CGFloat = 0
     private var spacing: CGFloat = 0
-    private var radius: CGFloat = 0
+    private var half: CGFloat = 0
     private var glowColor: RGB?
     private var glows: [Gradient?] = Array(repeating: nil, count: glowLevels + 1)
 
-    mutating func paint(_ values: [Double], color: RGB, in context: inout GraphicsContext, size: CGSize) {
-        layout(side: min(size.width, size.height))
+    mutating func paint(
+        _ values: [Double],
+        color: RGB,
+        shape: DotShape,
+        in context: inout GraphicsContext,
+        size: CGSize
+    ) {
+        layout(side: min(size.width, size.height), shape: shape)
         let tint = color.truncated
-        context.fill(basePath, with: shading(tint, opacity: Self.baseAlpha))
+        context.fill(basePath, with: shading(tint, opacity: geometry.base))
         for index in 0..<dotCount {
             let value = clamp(values[index], 0, 1.5)
             guard value >= 0.03 else { continue }
@@ -24,31 +31,39 @@ struct DotPainter {
         for index in 0..<dotCount {
             let value = clamp(values[index], 0, 1.5)
             guard value >= 0.03 else { continue }
-            paintDot(index, value: value, tint: tint, in: &context)
+            paintCell(index, value: value, tint: tint, in: &context)
         }
     }
 
     private mutating func paintGlow(_ index: Int, value: Double, tint: RGB, in context: inout GraphicsContext) {
         let heat = clamp((value - 0.85) / 0.55, 0, 1)
         let alpha = clamp(value, 0, 1)
-        let reach = radius * (1.5 + 2.5 * CGFloat(heat))
+        let reach = half * (1.5 + 2.5 * CGFloat(heat))
         let center = point(index)
-        let outer = radius + reach
+        let outer = half + reach
         let rect = CGRect(x: center.x - outer, y: center.y - outer, width: outer * 2, height: outer * 2)
         let gradient = glow(tint, alpha: alpha)
         context.fill(
             Path(ellipseIn: rect),
-            with: .radialGradient(gradient, center: center, startRadius: radius * 0.5, endRadius: outer)
+            with: .radialGradient(gradient, center: center, startRadius: half * 0.5, endRadius: outer)
         )
     }
 
-    private func paintDot(_ index: Int, value: Double, tint: RGB, in context: inout GraphicsContext) {
+    private func paintCell(_ index: Int, value: Double, tint: RGB, in context: inout GraphicsContext) {
         let heat = clamp((value - 0.85) / 0.55, 0, 1)
         let alpha = clamp(value, 0, 1)
-        let dot = radius * (1 + CGFloat(heat) * 0.12)
-        let center = point(index)
-        let rect = CGRect(x: center.x - dot, y: center.y - dot, width: dot * 2, height: dot * 2)
-        context.fill(Path(ellipseIn: rect), with: shading(tint.towardWhite(heat), opacity: alpha))
+        let path = cellPath(at: point(index), half: half * (1 + CGFloat(heat) * 0.12))
+        context.fill(path, with: shading(tint.towardWhite(heat), opacity: alpha))
+    }
+
+    private func cellPath(at center: CGPoint, half: CGFloat) -> Path {
+        let rect = CGRect(x: center.x - half, y: center.y - half, width: half * 2, height: half * 2)
+        switch layoutShape {
+        case .dot:
+            return Path(ellipseIn: rect)
+        case .square:
+            return Path(roundedRect: rect, cornerRadius: half * 2 * CGFloat(geometry.corner), style: .circular)
+        }
     }
 
     private mutating func glow(_ tint: RGB, alpha: Double) -> Gradient {
@@ -75,16 +90,17 @@ struct DotPainter {
         )
     }
 
-    private mutating func layout(side: CGFloat) {
-        guard side != layoutSide else { return }
+    private mutating func layout(side: CGFloat, shape: DotShape) {
+        guard side != layoutSide || shape != layoutShape else { return }
         layoutSide = side
+        layoutShape = shape
+        geometry = shape.geometry
         origin = side * 0.12
         spacing = (side - origin * 2) / CGFloat(dotGridSide - 1)
-        radius = spacing * 0.34
+        half = spacing * CGFloat(geometry.size) / 2
         var path = Path()
         for index in 0..<dotCount {
-            let center = point(index)
-            path.addEllipse(in: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+            path.addPath(cellPath(at: point(index), half: half))
         }
         basePath = path
     }

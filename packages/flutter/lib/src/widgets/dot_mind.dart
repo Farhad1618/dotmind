@@ -2,13 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../core/activity.dart';
+import '../core/cell_shape.dart';
 import '../core/labels.dart';
+import '../core/look.dart';
+import '../core/looks.dart';
 import '../core/patterns/catalog.dart';
 import '../core/phase.dart';
 import '../core/rgb.dart';
 import '../core/scene.dart';
+import '../core/scene_key.dart';
 import '../core/scene_selection.dart';
 import '../core/tools.dart';
+import 'aura.dart';
 import 'dot_matrix.dart';
 import 'dot_matrix_controller.dart';
 import 'dot_mind_style.dart';
@@ -45,6 +50,10 @@ class DotMind extends StatefulWidget {
     this.labels = const {},
     this.palette = const {},
     this.scene,
+    this.look = Look.classic,
+    this.shape,
+    this.scenes = const {},
+    this.aura,
     this.reducedMotion,
     this.style = const DotMindStyle(),
   });
@@ -59,6 +68,10 @@ class DotMind extends StatefulWidget {
     Map<String, String> labels = const {},
     Map<Scene, Rgb> palette = const {},
     Scene? scene,
+    Look look = Look.classic,
+    CellShape? shape,
+    Map<SceneKey, Scene> scenes = const {},
+    bool? aura,
     bool? reducedMotion,
     DotMindStyle style = const DotMindStyle(),
   }) : this(
@@ -71,6 +84,10 @@ class DotMind extends StatefulWidget {
          labels: labels,
          palette: palette,
          scene: scene,
+         look: look,
+         shape: shape,
+         scenes: scenes,
+         aura: aura,
          reducedMotion: reducedMotion,
          style: style,
        );
@@ -84,6 +101,10 @@ class DotMind extends StatefulWidget {
   final Map<String, String> labels;
   final Map<Scene, Rgb> palette;
   final Scene? scene;
+  final Look look;
+  final CellShape? shape;
+  final Map<SceneKey, Scene> scenes;
+  final bool? aura;
   final bool? reducedMotion;
   final DotMindStyle style;
 
@@ -140,7 +161,7 @@ class _DotMindState extends State<DotMind> {
 
   _Presentation _apply() {
     final activity = _activity;
-    final scene = widget.scene ?? sceneFor(activity);
+    final scene = widget.scene ?? sceneFor(activity, look: widget.look, overrides: widget.scenes);
     final color = widget.palette[scene] ?? sceneColor(scene);
     _matrix.still = _still;
     _matrix.present(scene, color, activity.progress);
@@ -165,29 +186,47 @@ class _DotMindState extends State<DotMind> {
   Widget build(BuildContext context) {
     final p = _presentation ?? _apply();
     final style = widget.style;
+    final look = lookDefinition(widget.look);
+    final shape = widget.shape ?? look.shape;
+    final aura = auraColor(p.color, on: widget.aura ?? look.aura);
     final em = style.fontSize;
     final hasLabel = p.text.isNotEmpty;
-    final row = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DotMatrix(controller: _matrix, size: widget.size, well: style.well, still: _still),
-        if (hasLabel) SizedBox(width: em * 0.6),
-        if (hasLabel)
-          Flexible(
-            child: ShimmerLabel(
-              text: p.text,
-              style: style.textStyle,
-              ink: style.ink,
-              peak: style.peak,
-              glow: _glowFor(p.color),
-              period: style.shimmerPeriod,
-              driver: _matrix,
-              mode: _shimmerMode(p.phase),
-            ),
-          ),
-      ],
+    final bare = widget.variant == DotMindVariant.bare;
+    final matrix = DotMatrix(controller: _matrix, size: widget.size, well: style.well, shape: shape, still: _still);
+    final label = hasLabel
+        ? ShimmerLabel(
+            text: p.text,
+            style: style.textStyle,
+            ink: style.ink,
+            peak: style.peak,
+            glow: _glowFor(p.color),
+            period: style.shimmerPeriod,
+            driver: _matrix,
+            mode: _shimmerMode(p.phase),
+          )
+        : null;
+    final body = AuraTransition(
+      color: aura,
+      animate: !_still,
+      child: label,
+      builder: (context, glow, label) {
+        final row = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (bare)
+              DecoratedBox(
+                decoration: BoxDecoration(borderRadius: wellRadius(shape, widget.size), boxShadow: wellAura(glow)),
+                child: matrix,
+              )
+            else
+              matrix,
+            if (label != null) SizedBox(width: em * 0.6),
+            if (label != null) Flexible(child: label),
+          ],
+        );
+        return bare ? row : _pill(row, hasLabel, em, glow);
+      },
     );
-    final body = widget.variant == DotMindVariant.bare ? row : _pill(row, hasLabel, em);
     return Semantics(
       container: true,
       liveRegion: true,
@@ -196,7 +235,7 @@ class _DotMindState extends State<DotMind> {
     );
   }
 
-  Widget _pill(Widget child, bool hasLabel, double em) {
+  Widget _pill(Widget child, bool hasLabel, double em, Color glow) {
     final style = widget.style;
     final inset = em * 0.35;
     return DecoratedBox(
@@ -204,9 +243,11 @@ class _DotMindState extends State<DotMind> {
         color: style.background,
         borderRadius: const BorderRadius.all(Radius.circular(999)),
         border: Border.all(color: style.edge),
-        boxShadow: style.elevated
-            ? const [BoxShadow(color: Color(0xCC000000), offset: Offset(0, 10), blurRadius: 30, spreadRadius: -14)]
-            : null,
+        boxShadow: [
+          if (style.elevated)
+            const BoxShadow(color: Color(0xCC000000), offset: Offset(0, 10), blurRadius: 30, spreadRadius: -14),
+          ...pillAura(glow),
+        ],
       ),
       child: Padding(padding: EdgeInsets.fromLTRB(inset, inset, hasLabel ? em * 1.15 : inset, inset), child: child),
     );

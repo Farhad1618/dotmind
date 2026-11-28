@@ -1,9 +1,12 @@
 package io.github.farhad1618.dotmind.compose
 
 import io.github.farhad1618.dotmind.Activity
+import io.github.farhad1618.dotmind.DotShape
 import io.github.farhad1618.dotmind.LabelKey
+import io.github.farhad1618.dotmind.Look
 import io.github.farhad1618.dotmind.Rgb
 import io.github.farhad1618.dotmind.Scene
+import io.github.farhad1618.dotmind.SceneKey
 import io.github.farhad1618.dotmind.labelFor
 
 internal data class DotMindOptions(
@@ -12,6 +15,10 @@ internal data class DotMindOptions(
     val labels: Map<LabelKey, String>,
     val palette: Map<Scene, Rgb>,
     val scene: Scene?,
+    val look: Look = Look.CLASSIC,
+    val scenes: Map<SceneKey, Scene> = emptyMap(),
+    val shape: DotShape = look.definition.shape,
+    val aura: Boolean = look.definition.aura,
 ) {
     fun visibleLabel(activity: Activity): String = if (!showLabel) "" else label ?: labelFor(activity, labels)
 

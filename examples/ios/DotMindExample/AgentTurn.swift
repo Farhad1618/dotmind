@@ -21,6 +21,9 @@ final class AgentTurn: ObservableObject {
             Step(delay: .milliseconds(1100), event: .thinking(chars: 90)),
             Step(delay: .milliseconds(500), event: .tool(name: "bash", id: "code")),
             Step(delay: .milliseconds(2600), event: .toolResult(id: "code")),
+            Step(delay: .milliseconds(700), event: .thinking(chars: 40)),
+            Step(delay: .milliseconds(500), event: .tool(name: "deploy_preview", id: "deploy")),
+            Step(delay: .milliseconds(2600), event: .toolResult(id: "deploy")),
             Step(delay: .milliseconds(900), event: .thinking(chars: 60)),
         ]
         steps += (0..<10).map { _ in Step(delay: .milliseconds(320), event: .text(chars: 48)) }

@@ -7,10 +7,22 @@ struct DotMindConfiguration: Hashable {
     var labels: [LabelKey: String]
     var palette: [SceneName: RGB]
     var scene: SceneName?
+    var look: Look
+    var shape: DotShape?
+    var scenes: [SceneKey: SceneName]
+    var aura: Bool?
     var reducedMotion: Bool?
 
+    var resolvedShape: DotShape {
+        shape ?? look.definition.shape
+    }
+
+    var showsAura: Bool {
+        aura ?? look.definition.aura
+    }
+
     func scene(for activity: Activity) -> SceneName {
-        scene ?? sceneFor(activity)
+        scene ?? sceneFor(activity, look: look, overrides: scenes)
     }
 
     func color(for scene: SceneName) -> RGB {

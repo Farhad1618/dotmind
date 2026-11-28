@@ -25,5 +25,14 @@ public object Patterns {
         Scene.ORBIT -> Orbit
         Scene.SERPENT -> Serpent
         Scene.PULSE -> Pulse
+        Scene.NEURAL -> Neural
+        Scene.MAGNIFIER -> Magnifier
+        Scene.GLYPH -> Glyph
+        Scene.SORT -> Sort
+        Scene.ROCKET -> Rocket
+        Scene.VERIFIED -> Verified
+        Scene.BUG -> Bug
+        Scene.BLOCKS -> Blocks
+        Scene.SCAN -> Scan
     }
 }

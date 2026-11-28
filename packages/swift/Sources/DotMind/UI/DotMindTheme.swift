@@ -9,6 +9,8 @@ public struct DotMindTheme {
     public var font: Font
     public var fontSize: CGFloat
     public var shimmerPeriod: Double
+    public var auraNear: Double
+    public var auraFar: Double
 
     public init(
         background: Color? = nil,
@@ -18,7 +20,9 @@ public struct DotMindTheme {
         peak: Color = .white,
         font: Font? = nil,
         fontSize: CGFloat = 15,
-        shimmerPeriod: Double = 2.4
+        shimmerPeriod: Double = 2.4,
+        auraNear: Double = 0.55,
+        auraFar: Double = 0.2
     ) {
         self.background = background ?? Color(hex: 0x0B0B0C)
         self.edge = edge ?? Color(hex: 0x26262A)
@@ -28,6 +32,8 @@ public struct DotMindTheme {
         self.font = font ?? .system(size: fontSize, weight: .medium)
         self.fontSize = fontSize
         self.shimmerPeriod = shimmerPeriod
+        self.auraNear = auraNear
+        self.auraFar = auraFar
     }
 
     public static var standard: DotMindTheme { DotMindTheme() }

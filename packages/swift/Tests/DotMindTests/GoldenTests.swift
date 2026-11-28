@@ -10,6 +10,7 @@ final class GoldenTests: XCTestCase {
 
     func testEveryPatternFrameMatchesTheReference() throws {
         XCTAssertEqual(fixture.frames.count, SceneName.allCases.count * 8)
+        XCTAssertEqual(Set(fixture.frames.map(\.scene)), Set(SceneName.allCases.map(\.rawValue)))
         var out = [Double](repeating: 0, count: dotCount)
         for frame in fixture.frames {
             let scene = try XCTUnwrap(SceneName(rawValue: frame.scene), frame.scene)
@@ -19,15 +20,30 @@ final class GoldenTests: XCTestCase {
     }
 
     func testToolNamesClassifyLikeTheReference() {
+        XCTAssertEqual(Set(fixture.tools.map(\.kind)), Set(ToolKind.allCases.map(\.rawValue)))
         for tool in fixture.tools {
             XCTAssertEqual(classifyTool(tool.name).rawValue, tool.kind, tool.name)
         }
     }
 
     func testActivitiesPickTheReferenceSceneAndLabel() {
+        XCTAssertFalse(fixture.scenes.isEmpty)
         for entry in fixture.scenes {
             XCTAssertEqual(sceneFor(entry.activity).rawValue, entry.scene, "\(entry.activity)")
             XCTAssertEqual(labelFor(entry.activity), entry.label, "\(entry.activity)")
+        }
+    }
+
+    func testEveryLookPicksTheReferenceSceneAndLabel() throws {
+        XCTAssertEqual(fixture.looks.count, classicScenes.count * Look.allCases.count)
+        for look in Look.allCases {
+            let keys = Set(fixture.looks.filter { $0.look == look.rawValue }.map { sceneKey($0.activity) })
+            XCTAssertEqual(keys, Set(classicScenes.keys), look.rawValue)
+        }
+        for entry in fixture.looks {
+            let look = try XCTUnwrap(Look(rawValue: entry.look), entry.look)
+            XCTAssertEqual(sceneFor(entry.activity, look: look).rawValue, entry.scene, "\(entry.look) \(entry.activity)")
+            XCTAssertEqual(labelFor(entry.activity), entry.label, "\(entry.look) \(entry.activity)")
         }
     }
 

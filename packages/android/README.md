@@ -4,9 +4,9 @@ Jetpack Compose port of dotmind. It shows a dot-matrix status indicator that fol
 
 | Module | Artifact | What it holds |
 |---|---|---|
-| `core` | `io.github.farhad1618:dotmind-core:0.1.0` | Pure Kotlin/JVM. `Phase`, `ToolKind`, `Activity`, `AgentEvent`, `classifyTool`, labels, `sceneFor`, the 17 patterns, `DotRenderer` (clock, energy, per-scene progress origin, smoothstep cross-fade), `ActivityTracker` with a `StateFlow` |
-| `adapters` | `io.github.farhad1618:dotmind-adapters:0.1.0` | Pure Kotlin. Anthropic Messages streaming events, OpenAI Responses events and Chat Completions chunks, as kotlinx.serialization models or `JsonObject` input, plus `Flow` followers |
-| `compose` | `io.github.farhad1618:dotmind-compose:0.1.0` | Android library. The `@Composable DotMind` |
+| `core` | `io.github.farhad1618:dotmind-core:0.2.0` | Pure Kotlin/JVM. `Phase`, `ToolKind`, `Activity`, `AgentEvent`, `classifyTool`, labels, `sceneFor`, looks (`Look`, `LOOKS`, `CLASSIC_SCENES`), cell shapes (`DotShape`), the 26 patterns, `DotRenderer` (clock, energy, per-scene progress origin, smoothstep cross-fade), `ActivityTracker` with a `StateFlow` |
+| `adapters` | `io.github.farhad1618:dotmind-adapters:0.2.0` | Pure Kotlin. Anthropic Messages streaming events, OpenAI Responses events and Chat Completions chunks, as kotlinx.serialization models or `JsonObject` input, plus `Flow` followers |
+| `compose` | `io.github.farhad1618:dotmind-compose:0.2.0` | Android library. The `@Composable DotMind` |
 
 `core` and `adapters` have no Android or UI imports, so they work on a server or in a plain JVM test as well.
 
@@ -27,8 +27,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.farhad1618:dotmind-compose:0.1.0")
-    implementation("io.github.farhad1618:dotmind-adapters:0.1.0")
+    implementation("io.github.farhad1618:dotmind-compose:0.2.0")
+    implementation("io.github.farhad1618:dotmind-adapters:0.2.0")
 }
 ```
 
@@ -93,6 +93,27 @@ DotMind(Activity(Phase.TOOL, tool = "web_search", kind = ToolKind.SEARCH))
 DotMind(Phase.IDLE, scene = Scene.EMBER, label = "Thinking")
 ```
 
+### Looks
+
+A look swaps the pictures for some states, the cell shape and whether the pill glows. The same tracker and labels drive every look.
+
+```kotlin
+DotMind(tracker, look = Look.ICONS)
+DotMind(tracker, look = Look.PIXEL)
+DotMind(tracker, look = Look.PIXEL, shape = DotShape.DOT, aura = true)
+DotMind(tracker, look = Look.ICONS, scenes = mapOf(SceneKey.THINKING to Scene.ORBIT))
+```
+
+| Look | Scenes that change | Shape | Aura |
+|---|---|---|---|
+| `Look.CLASSIC` | none | `DotShape.DOT` | off |
+| `Look.ICONS` | thinking: neural, done: verified, search: magnifier, translate: glyph, compute: sort, deploy: rocket | `DotShape.DOT` | on |
+| `Look.PIXEL` | debug: bug, code: blocks, search: scan | `DotShape.SQUARE` | off |
+
+The scene for a state is picked in this order: the `scene` parameter, then the `scenes` map (keyed by `SceneKey`, for example `SceneKey.TOOL_DEBUG`), then the look, then the classic table. `Look.fromId` returns `Look.CLASSIC` for a name it does not know. `sceneFor(activity, look, overrides)` and `sceneKey(activity)` in `core` do the same outside Compose.
+
+The aura is a soft glow in the current scene colour around the pill, or around the matrix well for `DotMindVariant.Bare`. It follows the scene colour through the same 0.35 s cross-fade as the dots, and fades in or out over 0.35 s when it is switched.
+
 ### Push events
 
 ```kotlin
@@ -135,6 +156,10 @@ The Vercel AI SDK adapter from the web package is not ported, because `useChat` 
 | `labels` | English | e.g. `mapOf(LabelKey.TOOL_SEARCH to "Buscando")` |
 | `palette` | | e.g. `mapOf(Scene.RADAR to Rgb(0, 200, 120))` |
 | `scene` | from state | Force one scene |
+| `look` | `Look.CLASSIC` | `CLASSIC`, `ICONS` or `PIXEL` |
+| `shape` | from the look | `DotShape.DOT` (round, 14% base alpha) or `DotShape.SQUARE` (rounded squares, 20% base alpha) |
+| `scenes` | | Per-state scene overrides, e.g. `mapOf(SceneKey.TOOL_DEBUG to Scene.BUG)` |
+| `aura` | from the look | `true` or `false` turns the glow on or off whatever the look says |
 | `reducedMotion` | system setting | Shows one still frame per state |
 | `colors` | `DotMindDefaults.Colors` | Pill background, edge, well, label ink and shimmer peak |
 | `textStyle` | `DotMindDefaults.LabelStyle` | Label font; the pill spacing scales with its size |
@@ -155,8 +180,7 @@ Requires JDK 17 and an Android SDK with platform 35.
 ```bash
 export JAVA_HOME=/path/to/jdk17
 export ANDROID_HOME=$HOME/Library/Android/sdk
-./gradlew :core:test :adapters:test :compose:assembleRelease
-./gradlew :compose:testDebugUnitTest
+./gradlew :core:test :adapters:test :compose:testDebugUnitTest :compose:assembleRelease :example:assembleDebug
 ```
 
-`core` tests load `../../spec/golden.json` and check every frame, tool kind, scene and label, and energy sample against the fixture's tolerance. To match the reference, the port follows the numeric rules in `spec/SPEC.md` section 7: 64-bit maths, `floor(x + 0.5)` rounding, positive modulo, fdlibm `sin` through `StrictMath`, and Float32 output buffers like the reference's `Float32Array`.
+`core` tests load `../../spec/golden.json` and check every frame, tool kind, scene and label, look, and energy sample against the fixture's tolerance. To match the reference, the port follows the numeric rules in `spec/SPEC.md` section 7: 64-bit maths, `floor(x + 0.5)` rounding, positive modulo, fdlibm `sin` through `StrictMath`, and Float32 output buffers like the reference's `Float32Array`.

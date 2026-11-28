@@ -20,8 +20,10 @@ void main() {
     final frames = golden.section('frames');
     expect(frames, hasLength(Scene.values.length * 8));
     final out = Float32List(cellCount);
+    final perScene = <Scene, int>{};
     for (final frame in frames) {
       final scene = sceneNamed(frame['scene']);
+      perScene[scene] = (perScene[scene] ?? 0) + 1;
       final t = (frame['t']! as num).toDouble();
       final ctx = PatternContext(
         energy: (frame['energy']! as num).toDouble(),
@@ -30,15 +32,19 @@ void main() {
       patternFor(scene)(t, out, ctx);
       expectValues(out, numbers(frame['values']), tolerance, '${scene.name}@$t/${ctx.progress}');
     }
+    expect(perScene, {for (final scene in Scene.values) scene: 8});
   });
 
   test('every golden tool name maps to the same kind', () {
     final tools = golden.section('tools');
     expect(tools, isNotEmpty);
+    final kinds = <String>{};
     for (final entry in tools) {
       final name = entry['name']! as String;
+      kinds.add(entry['kind']! as String);
       expect(classifyTool(name).name, entry['kind'], reason: name);
     }
+    expect(kinds, {for (final kind in ToolKind.values) kind.name});
   });
 
   test('every golden activity picks the same scene and label', () {
@@ -74,5 +80,20 @@ void main() {
       }
     }
     expect(next, samples.length);
+  });
+
+  test('every golden scene key picks the same scene and label in every look', () {
+    final entries = golden.section('looks');
+    expect(entries, hasLength(SceneKey.values.length * Look.values.length));
+    final covered = <(SceneKey, Look)>{};
+    for (final entry in entries) {
+      final activity = activityFrom(entry['activity']! as Map<String, Object?>);
+      final look = Look.values.byName(entry['look']! as String);
+      covered.add((SceneKey.of(activity), look));
+      expect(sceneFor(activity, look: look).name, entry['scene'], reason: '$activity in ${look.name}');
+      expect(sceneFor(activity, look: Look.named(entry['look']! as String)).name, entry['scene']);
+      expect(labelFor(activity), entry['label'], reason: '$activity in ${look.name}');
+    }
+    expect(covered, hasLength(entries.length));
   });
 }

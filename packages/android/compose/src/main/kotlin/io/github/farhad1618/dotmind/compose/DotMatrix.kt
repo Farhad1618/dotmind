@@ -16,18 +16,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import io.github.farhad1618.dotmind.DotShape
+import kotlin.math.roundToInt
 
-private val WellShape = RoundedCornerShape(24)
+private val WellShapes: Map<DotShape, RoundedCornerShape> =
+    DotShape.entries.associateWith { RoundedCornerShape((it.wellCorner * 100).roundToInt()) }
 
 @Composable
-internal fun DotMatrix(host: IndicatorHost, size: Dp, well: Color) {
+internal fun DotMatrix(host: IndicatorHost, size: Dp, well: Color, aura: Modifier = Modifier) {
     val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val running = host.visible && !host.still && lifecycle.isAtLeast(Lifecycle.State.STARTED)
+    val shape = host.shape
     FrameLoop(host, running)
     Canvas(
         modifier = Modifier
             .size(size)
-            .clip(WellShape)
+            .then(aura)
+            .clip(WellShapes.getValue(shape))
             .background(well)
             .clearAndSetSemantics {}
             .onGloballyPositioned { coordinates ->
@@ -36,6 +41,6 @@ internal fun DotMatrix(host: IndicatorHost, size: Dp, well: Color) {
             },
     ) {
         host.frame
-        drawDots(host.renderer, host.values, host.color)
+        drawDots(host.renderer, host.values, host.color, shape)
     }
 }

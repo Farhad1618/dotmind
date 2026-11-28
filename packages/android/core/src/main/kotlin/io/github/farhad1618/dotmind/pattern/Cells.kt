@@ -66,10 +66,10 @@ internal object Cells {
         IntArray(12) { j -> if (j < 6) cellAt(j + 1, y) else cellAt(j - 5, y + 1) }
     }
 
-    private fun path(vararg cells: Pair<Int, Int>): IntArray =
+    fun path(vararg cells: Pair<Int, Int>): IntArray =
         IntArray(cells.size) { cellAt(cells[it].first, cells[it].second) }
 
-    private fun bitmap(vararg rows: String): IntArray = buildList {
+    fun bitmap(vararg rows: String): IntArray = buildList {
         rows.forEachIndexed { y, row -> row.forEachIndexed { x, ch -> if (ch == '#') add(cellAt(x, y)) } }
     }.toIntArray()
 }

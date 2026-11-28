@@ -10,10 +10,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import io.github.farhad1618.dotmind.Activity
 import io.github.farhad1618.dotmind.ActivityTracker
+import io.github.farhad1618.dotmind.DotShape
 import io.github.farhad1618.dotmind.LabelKey
+import io.github.farhad1618.dotmind.Look
 import io.github.farhad1618.dotmind.Phase
 import io.github.farhad1618.dotmind.Rgb
 import io.github.farhad1618.dotmind.Scene
+import io.github.farhad1618.dotmind.SceneKey
 import io.github.farhad1618.dotmind.ToolKind
 import kotlin.time.Duration
 
@@ -28,12 +31,16 @@ public fun DotMind(
     labels: Map<LabelKey, String> = emptyMap(),
     palette: Map<Scene, Rgb> = emptyMap(),
     scene: Scene? = null,
+    look: Look = Look.CLASSIC,
+    shape: DotShape? = null,
+    scenes: Map<SceneKey, Scene> = emptyMap(),
+    aura: Boolean? = null,
     reducedMotion: Boolean? = null,
     colors: DotMindColors = DotMindDefaults.Colors,
     textStyle: TextStyle = DotMindDefaults.LabelStyle,
     shimmerDuration: Duration = DotMindDefaults.ShimmerDuration,
 ) {
-    val options = DotMindOptions(label, showLabel, labels, palette, scene)
+    val options = dotMindOptions(label, showLabel, labels, palette, scene, look, shape, scenes, aura)
     val systemReduced = rememberSystemReducedMotion()
     val still = reducedMotion ?: systemReduced
     val host = remember { IndicatorHost() }
@@ -52,13 +59,35 @@ public fun DotMind(
     labels: Map<LabelKey, String> = emptyMap(),
     palette: Map<Scene, Rgb> = emptyMap(),
     scene: Scene? = null,
+    look: Look = Look.CLASSIC,
+    shape: DotShape? = null,
+    scenes: Map<SceneKey, Scene> = emptyMap(),
+    aura: Boolean? = null,
     reducedMotion: Boolean? = null,
     colors: DotMindColors = DotMindDefaults.Colors,
     textStyle: TextStyle = DotMindDefaults.LabelStyle,
     shimmerDuration: Duration = DotMindDefaults.ShimmerDuration,
 ) {
     val activity = remember(phase) { Activity(phase) }
-    DotMind(activity, modifier, variant, size, label, showLabel, labels, palette, scene, reducedMotion, colors, textStyle, shimmerDuration)
+    DotMind(
+        activity = activity,
+        modifier = modifier,
+        variant = variant,
+        size = size,
+        label = label,
+        showLabel = showLabel,
+        labels = labels,
+        palette = palette,
+        scene = scene,
+        look = look,
+        shape = shape,
+        scenes = scenes,
+        aura = aura,
+        reducedMotion = reducedMotion,
+        colors = colors,
+        textStyle = textStyle,
+        shimmerDuration = shimmerDuration,
+    )
 }
 
 @Composable
@@ -72,12 +101,16 @@ public fun DotMind(
     labels: Map<LabelKey, String> = emptyMap(),
     palette: Map<Scene, Rgb> = emptyMap(),
     scene: Scene? = null,
+    look: Look = Look.CLASSIC,
+    shape: DotShape? = null,
+    scenes: Map<SceneKey, Scene> = emptyMap(),
+    aura: Boolean? = null,
     reducedMotion: Boolean? = null,
     colors: DotMindColors = DotMindDefaults.Colors,
     textStyle: TextStyle = DotMindDefaults.LabelStyle,
     shimmerDuration: Duration = DotMindDefaults.ShimmerDuration,
 ) {
-    val options = DotMindOptions(label, showLabel, labels, palette, scene)
+    val options = dotMindOptions(label, showLabel, labels, palette, scene, look, shape, scenes, aura)
     val systemReduced = rememberSystemReducedMotion()
     val still = reducedMotion ?: systemReduced
     val host = remember(tracker) { IndicatorHost() }
@@ -89,6 +122,28 @@ public fun DotMind(
     }
     DotMindContent(host, variant, size, colors, textStyle, shimmerDuration, modifier)
 }
+
+private fun dotMindOptions(
+    label: String?,
+    showLabel: Boolean,
+    labels: Map<LabelKey, String>,
+    palette: Map<Scene, Rgb>,
+    scene: Scene?,
+    look: Look,
+    shape: DotShape?,
+    scenes: Map<SceneKey, Scene>,
+    aura: Boolean?,
+): DotMindOptions = DotMindOptions(
+    label = label,
+    showLabel = showLabel,
+    labels = labels,
+    palette = palette,
+    scene = scene,
+    look = look,
+    scenes = scenes,
+    shape = shape ?: look.definition.shape,
+    aura = aura ?: look.definition.aura,
+)
 
 @Composable
 public fun rememberActivityTracker(tools: Map<String, ToolKind> = emptyMap()): ActivityTracker =

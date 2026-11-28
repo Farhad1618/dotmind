@@ -1,16 +1,17 @@
 import { mount, type DotMindController } from "./mount.ts";
 import type { ActivityTracker } from "./tracker.ts";
-import type { Activity, Phase, SceneName, ToolKind } from "./types.ts";
+import type { Activity, DotMindOptions, Look, Phase, SceneMap, SceneName, Shape, ToolKind } from "./types.ts";
 import { classifyTool } from "./tools.ts";
 
 const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as typeof HTMLElement) : HTMLElement;
 
 export class DotMindElement extends Base {
-  static observedAttributes = ["phase", "tool", "kind", "label", "variant", "size", "scene"];
+  static observedAttributes = ["phase", "tool", "kind", "label", "variant", "size", "scene", "look", "shape", "aura"];
 
   private controller: DotMindController | null = null;
   private explicit: Activity | null = null;
   private unsubscribe: (() => void) | null = null;
+  private sceneMap: SceneMap | undefined;
 
   get activity(): Activity {
     return this.explicit ?? this.fromAttributes();
@@ -19,6 +20,15 @@ export class DotMindElement extends Base {
   set activity(value: Activity | Phase) {
     this.explicit = typeof value === "string" ? { phase: value } : value;
     this.controller?.update(this.explicit);
+  }
+
+  get scenes(): SceneMap | undefined {
+    return this.sceneMap;
+  }
+
+  set scenes(value: SceneMap | undefined) {
+    this.sceneMap = value;
+    this.controller?.setOptions(this.options());
   }
 
   connect(tracker: ActivityTracker): () => void {
@@ -49,14 +59,19 @@ export class DotMindElement extends Base {
     if (!this.explicit) this.controller.update(this.fromAttributes());
   }
 
-  private options() {
+  private options(): DotMindOptions {
     const label = this.getAttribute("label");
     const size = Number(this.getAttribute("size"));
+    const aura = this.getAttribute("aura");
     return {
       variant: this.getAttribute("variant") === "bare" ? ("bare" as const) : ("pill" as const),
       size: Number.isFinite(size) && size > 0 ? size : 28,
       label: label === null ? undefined : label === "" ? (false as const) : label,
       scene: (this.getAttribute("scene") as SceneName | null) ?? undefined,
+      look: (this.getAttribute("look") as Look | null) ?? undefined,
+      shape: (this.getAttribute("shape") as Shape | null) ?? undefined,
+      aura: aura === null ? undefined : aura !== "false",
+      scenes: this.sceneMap,
     };
   }
 

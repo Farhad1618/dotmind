@@ -15,6 +15,9 @@ Dot-matrix status indicators for AI interfaces. Instead of a loader you switch o
 | reading or editing files (`read_file`, `text_editor`) | a page being read line by line | Reading files |
 | querying data (`run_sql`, `query_clickhouse`) | stacked disks lighting in turn | Querying data |
 | calculating (`calculate_margin`, `plot`) | a breathing diamond | Calculating |
+| translating (`translate_text`, `localize`) | a glyph morphing from A to 文 | Translating |
+| deploying (`deploy_service`, `kubectl`, `release`) | a rocket lifting off its pad | Deploying |
+| debugging (`debugger_step`, `breakpoint`) | a bug assembling, legs wiggling | Debugging |
 | any other tool (`get_weather`) | a trace around the edge | Using get weather |
 | writing the answer | lines filling in as text arrives | Writing |
 | waiting for approval | a slow spinner | Waiting for you |
@@ -22,6 +25,28 @@ Dot-matrix status indicators for AI interfaces. Instead of a loader you switch o
 | finished | a check mark drawn in | Done |
 
 The writing scene moves one dot for every four characters received, and the whole matrix speeds up and brightens with the token rate, then settles when the stream stalls. Scenes cross-fade into each other.
+
+## Looks
+
+Three looks ship in the box. Pick one with `look`; the same stream drives all of them.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Farhad1618/dotmind/main/docs/looks.gif" alt="The icons look (neural, magnifier, glyph, sort, rocket, verified, each with a coloured glow) and the pixel look (bug, blocks, scan on square cells)" width="800">
+</p>
+
+| `look` | Cells | What changes |
+|---|---|---|
+| `classic` (default) | round dots | The scenes above. |
+| `icons` | round dots + coloured glow | Thinking draws a firing neural net, search a wandering magnifier, translate morphs A into 文, compute sorts a bar chart, deploy launches a rocket, done draws a check with a ring. |
+| `pixel` | square cells | Debugging assembles a pixel bug, code stacks falling blocks, search scans rows like an old LCD. |
+
+```tsx
+<DotMind tracker={tracker} look="icons" />
+<DotMind tracker={tracker} look="pixel" />
+<DotMind tracker={tracker} scenes={{ thinking: "neural", "tool:code": "blocks" }} shape="square" aura />
+```
+
+Every scene works with every look: `scenes` maps any state (`thinking`, `writing`, `tool:search`, `tool:deploy`…) to any of the 26 scenes, and `shape` and `aura` override the look's defaults.
 
 ## Install
 
@@ -116,10 +141,14 @@ When a turn ends because the model asked your code to run a tool (`stop_reason: 
 | `label` | from state | Fixed text, or `false` to hide it. |
 | `labels` | English | Override any label, e.g. `{ "tool:search": "Buscando" }`. |
 | `palette` | | Recolour any scene: `{ radar: [0, 200, 120] }`. |
+| `look` | `classic` | `classic`, `icons` or `pixel`. Sets the scenes, cell shape and glow. |
+| `scenes` | | Pick the scene per state, e.g. `{ thinking: "neural", "tool:search": "scan" }`. |
+| `shape` | from look | `dot` or `square`. |
+| `aura` | from look | Soft glow around the pill in the current scene colour. |
 | `scene` | from state | Force one scene, ignoring the state. |
 | `reducedMotion` | system setting | Show a still frame per state. |
 
-CSS custom properties: `--dm-bg`, `--dm-edge`, `--dm-well`, `--dm-ink`, `--dm-peak`, `--dm-font`, `--dm-font-size`, `--dm-shimmer`.
+CSS custom properties: `--dm-bg`, `--dm-edge`, `--dm-well`, `--dm-ink`, `--dm-peak`, `--dm-font`, `--dm-font-size`, `--dm-shimmer`, `--dm-aura`.
 
 Hidden indicators stop drawing, every indicator on a page shares one animation frame, and the label sits in a polite live region so screen readers hear "Searching", not every frame.
 

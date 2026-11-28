@@ -1,6 +1,6 @@
 {
   "name": "dotmind",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dot-matrix AI status indicators that follow what the model is actually doing: reasoning, calling tools, writing. Wire in an Anthropic, OpenAI or AI SDK stream and the dots change on their own.",
   "license": "MIT",
   "repository": {

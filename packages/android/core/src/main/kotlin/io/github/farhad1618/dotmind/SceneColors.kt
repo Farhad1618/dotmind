@@ -23,5 +23,14 @@ public object SceneColors {
         Scene.ORBIT -> Rgb(61, 123, 255)
         Scene.SERPENT -> Rgb(154, 107, 255)
         Scene.PULSE -> Rgb(255, 122, 26)
+        Scene.NEURAL -> Rgb(150, 104, 255)
+        Scene.MAGNIFIER -> Rgb(64, 196, 236)
+        Scene.GLYPH -> Rgb(255, 214, 64)
+        Scene.SORT -> Rgb(255, 120, 32)
+        Scene.ROCKET -> Rgb(236, 72, 196)
+        Scene.VERIFIED -> Rgb(64, 214, 140)
+        Scene.BUG -> Rgb(72, 164, 255)
+        Scene.BLOCKS -> Rgb(255, 150, 40)
+        Scene.SCAN -> Rgb(255, 82, 72)
     }
 }

@@ -1,6 +1,6 @@
 # dotmind iOS example
 
-One screen: a live indicator replaying a scripted agent turn, then every state and scene.
+One screen: a Look picker (Classic, Icons, Pixel), a live indicator replaying a scripted agent turn, every state in the chosen look, the icons and pixel scenes, then the fixed scenes.
 
 ```bash
 brew install xcodegen

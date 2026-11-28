@@ -15,13 +15,17 @@ public object DotGeometry {
 
     public fun radius(side: Double): Double = step(side) * RADIUS
 
+    public fun half(side: Double, shape: DotShape): Double = step(side) * shape.size / 2
+
+    public fun cornerRadius(half: Double, shape: DotShape): Double = half * 2 * shape.corner
+
     public fun whiteness(value: Double): Double = ((value - 0.85) / 0.55).coerceIn(0.0, 1.0)
 
     public fun alpha(value: Double): Double = value.coerceIn(0.0, 1.0)
 
-    public fun glowRadius(radius: Double, whiteness: Double): Double = radius * (1.5 + 2.5 * whiteness)
+    public fun glowRadius(half: Double, whiteness: Double): Double = half * (1.5 + 2.5 * whiteness)
 
-    public fun litRadius(radius: Double, whiteness: Double): Double = radius * (1 + 0.12 * whiteness)
+    public fun litRadius(half: Double, whiteness: Double): Double = half * (1 + 0.12 * whiteness)
 
     public fun toward(channel: Double, whiteness: Double): Double = channel + (255 - channel) * whiteness
 

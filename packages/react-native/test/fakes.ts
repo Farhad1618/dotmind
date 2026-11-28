@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Activity, RGB, SceneName, ToolKind } from "dotmind";
+import type { Activity, Look, RGB, SceneName, ToolKind } from "dotmind";
 import type { FrameScheduler } from "../src/frameLoop.ts";
 import type { MatrixPainter } from "../src/painter.ts";
 
@@ -48,6 +48,7 @@ export interface Golden {
   frames: { scene: SceneName; t: number; progress: number; energy: number; values: number[] }[];
   tools: { name: string; kind: ToolKind }[];
   scenes: { activity: Activity; scene: string; label: string }[];
+  looks: { activity: Activity; look: Look; scene: SceneName; label: string }[];
   energy: { frame: number; energy: number; values: number[] }[];
 }
 

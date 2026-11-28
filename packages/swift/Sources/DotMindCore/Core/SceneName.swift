@@ -16,4 +16,13 @@ public enum SceneName: String, CaseIterable, Codable, Hashable, Sendable {
     case orbit
     case serpent
     case pulse
+    case neural
+    case magnifier
+    case glyph
+    case sort
+    case rocket
+    case verified
+    case bug
+    case blocks
+    case scan
 }

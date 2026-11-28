@@ -61,6 +61,23 @@ const List<(ToolKind, List<String>)> _rules = [
     ],
   ),
   (ToolKind.compute, ['calc', 'math', 'compute', 'sum', 'stat', 'analy', 'chart', 'plot', 'forecast']),
+  (
+    ToolKind.translate,
+    [
+      'translate',
+      'translation',
+      'translator',
+      'i18n',
+      'localize',
+      'localise',
+      'localization',
+      'localisation',
+      'l10n',
+      'locale',
+    ],
+  ),
+  (ToolKind.deploy, ['deploy', 'deployment', 'release', 'publish', 'rollout', 'ship', 'kubectl', 'helm']),
+  (ToolKind.debug, ['debug', 'debugger', 'breakpoint', 'stacktrace', 'traceback', 'inspect']),
 ];
 
 final RegExp _camelBoundary = RegExp('([a-z0-9])([A-Z])');

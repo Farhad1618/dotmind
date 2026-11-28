@@ -63,3 +63,15 @@ func trail(_ out: inout [Double], _ path: [Int], head: Double, length: Int, deca
         out[index] = max(out[index], value)
     }
 }
+
+@inline(__always)
+func positiveModulo(_ value: Double, _ divisor: Double) -> Double {
+    (value.truncatingRemainder(dividingBy: divisor) + divisor).truncatingRemainder(dividingBy: divisor)
+}
+
+@inline(__always)
+func light(_ out: inout [Double], _ x: Int, _ y: Int, _ value: Double) {
+    guard x >= 0, x < Grid.side, y >= 0, y < Grid.side else { return }
+    let index = cell(x, y)
+    if value > out[index] { out[index] = value }
+}

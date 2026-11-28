@@ -17,6 +17,8 @@ struct DotMindContent: View {
         let color = configuration.color(for: scene)
         let text = configuration.visibleText(for: activity)
         let spoken = configuration.spokenText(for: activity)
+        let shape = configuration.resolvedShape
+        let aura = configuration.showsAura
         let shimmer = ShimmerLabel.gradient(theme: theme, glow: Color(color.glow))
 
         TimelineView(.animation(minimumInterval: nil, paused: paused)) { timeline in
@@ -27,12 +29,14 @@ struct DotMindContent: View {
                         activity: activity,
                         scene: scene,
                         color: color,
+                        shape: shape,
                         date: timeline.date,
                         still: still,
                         visible: visible
                     ),
                     size: configuration.size,
-                    well: theme.well
+                    theme: theme,
+                    aura: aura && configuration.variant == .bare
                 )
                 if !text.isEmpty {
                     ShimmerLabel(
@@ -43,7 +47,14 @@ struct DotMindContent: View {
                     )
                 }
             }
-            .modifier(VariantBackground(variant: configuration.variant, theme: theme))
+            .modifier(
+                VariantBackground(
+                    variant: configuration.variant,
+                    theme: theme,
+                    aura: color,
+                    auraOn: aura && configuration.variant == .pill
+                )
+            )
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(spoken))

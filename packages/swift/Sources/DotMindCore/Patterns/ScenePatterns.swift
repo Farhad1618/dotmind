@@ -19,6 +19,15 @@ extension SceneName {
         case .orbit: AmbientPatterns.orbit(time, &out)
         case .serpent: AmbientPatterns.serpent(time, &out)
         case .pulse: AmbientPatterns.pulse(time, &out)
+        case .neural: IconPatterns.neural(time, &out)
+        case .magnifier: IconPatterns.magnifier(time, &out)
+        case .glyph: IconPatterns.glyph(time, &out)
+        case .sort: IconPatterns.sort(time, &out)
+        case .rocket: IconPatterns.rocket(time, &out)
+        case .verified: IconPatterns.verified(time, &out)
+        case .bug: PixelPatterns.bug(time, &out)
+        case .blocks: PixelPatterns.blocks(time, &out)
+        case .scan: PixelPatterns.scan(time, &out)
         }
     }
 

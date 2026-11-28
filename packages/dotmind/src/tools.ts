@@ -7,6 +7,9 @@ const RULES: ReadonlyArray<readonly [ToolKind, readonly string[]]> = [
   ["code", ["code", "exec", "run", "python", "bash", "shell", "terminal", "sandbox", "eval", "interpreter", "script", "notebook"]],
   ["file", ["file", "read", "write", "edit", "fs", "doc", "pdf", "upload", "download", "save", "replace", "editor", "ls", "dir"]],
   ["compute", ["calc", "math", "compute", "sum", "stat", "analy", "chart", "plot", "forecast"]],
+  ["translate", ["translate", "translation", "translator", "i18n", "localize", "localise", "localization", "localisation", "l10n", "locale"]],
+  ["deploy", ["deploy", "deployment", "release", "publish", "rollout", "ship", "kubectl", "helm"]],
+  ["debug", ["debug", "debugger", "breakpoint", "stacktrace", "traceback", "inspect"]],
 ];
 
 export function toolTokens(name: string): string[] {

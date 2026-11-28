@@ -2,35 +2,47 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 
+import '../core/cell_shape.dart';
 import '../core/patterns/grid.dart';
 import 'dot_matrix_controller.dart';
 import 'dot_paint_table.dart';
 
 const double _padding = 0.12;
-const double _radiusRatio = 0.34;
 const double _visible = 0.03;
 
 class DotMatrixPainter extends CustomPainter {
-  DotMatrixPainter(this.controller) : super(repaint: controller.repaint);
+  DotMatrixPainter(this.controller, {this.shape = CellShape.dot})
+    : _table = DotPaintTable(baseAlpha: shape.base),
+      super(repaint: controller.repaint);
 
   final DotMatrixController controller;
-  final DotPaintTable _table = DotPaintTable();
+  final CellShape shape;
+  final DotPaintTable _table;
   final List<Offset> _centers = List<Offset>.filled(cellCount, Offset.zero);
   final Paint _base = Paint()..isAntiAlias = true;
   final Paint _glow = Paint()..isAntiAlias = true;
   final Paint _dot = Paint()..isAntiAlias = true;
   double _side = -1;
-  double _radius = 0;
+  double _half = 0;
 
   void _layout(double side) {
     _side = side;
     final pad = side * _padding;
     final step = (side - pad * 2) / (gridSize - 1);
-    _radius = step * _radiusRatio;
+    _half = step * shape.size / 2;
     for (var i = 0; i < cellCount; i++) {
       _centers[i] = Offset(pad + cellX(i) * step, pad + cellY(i) * step);
     }
-    _table.layout(_radius);
+    _table.layout(_half);
+  }
+
+  void _cell(Canvas canvas, Offset center, double half, Paint paint) {
+    if (shape == CellShape.dot) {
+      canvas.drawCircle(center, half, paint);
+      return;
+    }
+    final rect = Rect.fromCircle(center: center, radius: half);
+    canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(half * 2 * shape.corner)), paint);
   }
 
   @override
@@ -45,23 +57,24 @@ class DotMatrixPainter extends CustomPainter {
     _table.useColor(rgb[0].toInt(), rgb[1].toInt(), rgb[2].toInt());
     _base.color = _table.baseColor;
     for (var i = 0; i < cellCount; i++) {
-      canvas.drawCircle(_centers[i], _radius, _base);
+      _cell(canvas, _centers[i], _half, _base);
     }
     for (var i = 0; i < cellCount; i++) {
       final v = clampTo(values[i], 0, 1.5);
       if (v < _visible) continue;
       final level = _table.levelFor(v);
-      final radius = _radius * _table.scale(level);
+      final half = _half * _table.scale(level);
       _glow
         ..color = _table.glowColor(level)
         ..maskFilter = _table.blur(level);
-      canvas.drawCircle(_centers[i], radius, _glow);
+      _cell(canvas, _centers[i], half, _glow);
       _dot.color = _table.dotColor(level);
-      canvas.drawCircle(_centers[i], radius, _dot);
+      _cell(canvas, _centers[i], half, _dot);
     }
     controller.drawn = true;
   }
 
   @override
-  bool shouldRepaint(DotMatrixPainter oldDelegate) => oldDelegate.controller != controller;
+  bool shouldRepaint(DotMatrixPainter oldDelegate) =>
+      oldDelegate.controller != controller || oldDelegate.shape != shape;
 }

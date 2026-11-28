@@ -13,6 +13,9 @@ public enum class LabelKey(public val id: String) {
     TOOL_FILE("tool:file"),
     TOOL_DATABASE("tool:database"),
     TOOL_COMPUTE("tool:compute"),
+    TOOL_TRANSLATE("tool:translate"),
+    TOOL_DEPLOY("tool:deploy"),
+    TOOL_DEBUG("tool:debug"),
     TOOL_GENERIC("tool:generic");
 
     public companion object {
@@ -25,6 +28,9 @@ public enum class LabelKey(public val id: String) {
             ToolKind.FILE -> TOOL_FILE
             ToolKind.DATABASE -> TOOL_DATABASE
             ToolKind.COMPUTE -> TOOL_COMPUTE
+            ToolKind.TRANSLATE -> TOOL_TRANSLATE
+            ToolKind.DEPLOY -> TOOL_DEPLOY
+            ToolKind.DEBUG -> TOOL_DEBUG
             ToolKind.GENERIC -> TOOL_GENERIC
         }
 

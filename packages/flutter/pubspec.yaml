@@ -1,6 +1,6 @@
 name: dotmind
 description: Dot-matrix status indicator for AI interfaces. Follows an Anthropic or OpenAI stream and shows what the model is doing now, from thinking and tool calls to writing.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/Farhad1618/dotmind
 issue_tracker: https://github.com/Farhad1618/dotmind/issues
 topics:

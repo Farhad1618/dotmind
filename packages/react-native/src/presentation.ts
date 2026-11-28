@@ -1,4 +1,5 @@
 import { labelFor, sceneFor, SCENE_COLORS, type Activity, type DotMindOptions, type Phase, type RGB, type SceneName } from "dotmind";
+import { knownLook } from "./lookStyle.ts";
 
 export type AccessibilityRoleName = "progressbar" | "text";
 
@@ -13,7 +14,7 @@ export interface Presentation {
   readonly busy: boolean;
 }
 
-export type PresentationOptions = Pick<DotMindOptions, "label" | "labels" | "palette" | "scene">;
+export type PresentationOptions = Pick<DotMindOptions, "label" | "labels" | "palette" | "scene" | "look" | "scenes">;
 
 const RESTING: ReadonlySet<Phase> = new Set<Phase>(["idle", "done", "error"]);
 
@@ -27,7 +28,7 @@ export function glowFor(color: RGB): RGB {
 }
 
 export function present(activity: Activity, options: PresentationOptions = {}): Presentation {
-  const scene = options.scene ?? sceneFor(activity);
+  const scene = options.scene ?? sceneFor(activity, knownLook(options.look), options.scenes);
   const color = options.palette?.[scene] ?? SCENE_COLORS[scene];
   const derived = labelFor(activity, options.labels);
   const text = options.label === false ? "" : options.label ?? derived;

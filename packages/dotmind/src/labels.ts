@@ -16,6 +16,9 @@ export const DEFAULT_LABELS: LabelMap = {
   "tool:file": "Reading files",
   "tool:database": "Querying data",
   "tool:compute": "Calculating",
+  "tool:translate": "Translating",
+  "tool:deploy": "Deploying",
+  "tool:debug": "Debugging",
   "tool:generic": "Using a tool",
 };
 

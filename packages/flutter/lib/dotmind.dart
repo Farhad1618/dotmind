@@ -1,6 +1,9 @@
 export 'src/core/activity.dart';
 export 'src/core/agent_event.dart';
+export 'src/core/cell_shape.dart';
 export 'src/core/labels.dart';
+export 'src/core/look.dart';
+export 'src/core/looks.dart';
 export 'src/core/patterns/catalog.dart' show patternFor, sceneColor, sceneColors;
 export 'src/core/patterns/grid.dart' show cellCount, gridSize;
 export 'src/core/patterns/pattern.dart';
@@ -8,6 +11,7 @@ export 'src/core/phase.dart';
 export 'src/core/renderer.dart' show DotRenderer, blendSeconds;
 export 'src/core/rgb.dart';
 export 'src/core/scene.dart';
+export 'src/core/scene_key.dart';
 export 'src/core/scene_selection.dart';
 export 'src/core/tool_kind.dart';
 export 'src/core/tools.dart';

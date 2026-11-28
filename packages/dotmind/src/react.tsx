@@ -19,12 +19,16 @@ export function DotMind({
   labels,
   palette,
   scene,
+  look,
+  shape,
+  scenes,
+  aura,
   reducedMotion,
   ...rest
 }: DotMindProps) {
   const host = useRef<HTMLSpanElement>(null);
   const controller = useRef<DotMindController | null>(null);
-  const options: DotMindOptions = { variant, size, label, labels, palette, scene, reducedMotion };
+  const options: DotMindOptions = { variant, size, label, labels, palette, scene, look, shape, scenes, aura, reducedMotion };
   const optionsKey = JSON.stringify(options);
 
   useEffect(() => {

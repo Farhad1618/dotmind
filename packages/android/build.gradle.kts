@@ -9,7 +9,7 @@ plugins {
 
 subprojects {
     group = "io.github.farhad1618"
-    version = "0.1.0"
+    version = "0.2.0"
 
     plugins.withId("maven-publish") {
         extensions.configure<PublishingExtension> {

@@ -45,6 +45,11 @@ section{display:flex;flex-direction:column;gap:22px}
 pre{margin:0;font:12.5px/1.6 var(--mono);background:var(--code);color:#cfcfd6;border-radius:14px;padding:16px 18px;overflow-x:auto;box-shadow:inset 0 0 0 1px var(--rule)}
 .k{color:#8f7dff}.s{color:#7fd1a8}.c{color:var(--ink-faint)}
 .inline{display:flex;flex-wrap:wrap;align-items:center;gap:14px;color:var(--ink-dim)}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#151517;box-shadow:inset 0 0 0 1px var(--rule);align-self:flex-start}
+.switch button{border:0;background:transparent;color:var(--ink-dim);padding:9px 16px}
+.switch button[aria-pressed=true]{background:#26262c;color:var(--ink);box-shadow:inset 0 0 0 1px #34343c}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:26px 26px;padding:8px 4px}
+.row-title{font:11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
 footer{display:flex;justify-content:space-between;gap:12px;font:11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
 </style>
 </head>
@@ -72,6 +77,22 @@ footer{display:flex;justify-content:space-between;gap:12px;font:11px/1 var(--mon
         <div class="track" id="track"></div>
       </div>
     </div>
+  </section>
+
+  <section aria-labelledby="looks-h" id="looks">
+    <div>
+      <h2 id="looks-h">Looks</h2>
+      <p>Pick a look and the same states draw different pictures. <code>icons</code> gives each job its own little icon and a soft glow; <code>pixel</code> draws square cells like an old LCD. The switch re-skins the replay above and every state below.</p>
+    </div>
+    <div class="switch" role="group" aria-label="Look">
+      <button data-look="classic" aria-pressed="true">Classic</button>
+      <button data-look="icons" aria-pressed="false">Icons</button>
+      <button data-look="pixel" aria-pressed="false">Pixel</button>
+    </div>
+    <span class="row-title">look="icons"</span>
+    <div class="row" id="icons-row"></div>
+    <span class="row-title">look="pixel"</span>
+    <div class="row" id="pixel-row"></div>
   </section>
 
   <section>
@@ -130,6 +151,9 @@ const STATES = [
   { phase: "tool", tool: "read_file" },
   { phase: "tool", tool: "run_sql" },
   { phase: "tool", tool: "calculate_margin" },
+  { phase: "tool", tool: "translate_text" },
+  { phase: "tool", tool: "deploy_service" },
+  { phase: "tool", tool: "debugger_step" },
   { phase: "tool", tool: "get_weather" },
   { phase: "writing" },
   { phase: "waiting", tool: "deploy_config" },
@@ -156,6 +180,37 @@ setInterval(() => {
     requestAnimationFrame(() => el.setAttribute("phase", p));
   }
 }, 4000);
+
+function sceneRow(host, look, items) {
+  for (const [scene, label] of items) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const el = document.createElement("dot-mind");
+    el.setAttribute("look", look);
+    el.setAttribute("scene", scene);
+    el.setAttribute("label", label);
+    el.setAttribute("size", "40");
+    const code = document.createElement("code");
+    code.textContent = `scene="${scene}"`;
+    cell.append(el, code);
+    host.append(cell);
+  }
+}
+sceneRow(document.getElementById("icons-row"), "icons", [
+  ["neural", "Thinking"], ["magnifier", "Searching"], ["glyph", "Translating"],
+  ["sort", "Sorting"], ["rocket", "Deploying"], ["verified", "Done"],
+]);
+sceneRow(document.getElementById("pixel-row"), "pixel", [["bug", "Debugging"], ["blocks", "Running code"], ["scan", "Searching"]]);
+
+const lookButtons = [...document.querySelectorAll(".switch button")];
+function setLook(look) {
+  for (const b of lookButtons) b.setAttribute("aria-pressed", String(b.dataset.look === look));
+  for (const el of [document.getElementById("live"), ...states.querySelectorAll("dot-mind")]) {
+    if (look === "classic") el.removeAttribute("look");
+    else el.setAttribute("look", look);
+  }
+}
+for (const b of lookButtons) b.addEventListener("click", () => setLook(b.dataset.look));
 
 const eight = document.getElementById("eight");
 for (const scene of ["ember", "orbit", "prism", "serpent", "circuit", "pulse", "comet", "halo"]) {

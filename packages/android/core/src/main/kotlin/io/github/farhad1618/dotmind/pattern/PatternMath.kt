@@ -1,5 +1,6 @@
 package io.github.farhad1618.dotmind.pattern
 
+import kotlin.math.abs
 import kotlin.math.floor
 
 public const val GRID: Int = 8
@@ -56,3 +57,31 @@ internal fun FloatArray.trail(path: IntArray, head: Double, length: Int, decay: 
         raise(path[index], if (k == 0) 1.4 else pow(decay, k) * 1.05)
     }
 }
+
+internal fun FloatArray.light(x: Int, y: Int, value: Double) {
+    if (x < 0 || x >= GRID || y < 0 || y >= GRID) return
+    raise(cellAt(x, y), value)
+}
+
+internal fun line(fromX: Int, fromY: Int, toX: Int, toY: Int): IntArray = buildList {
+    var x = fromX
+    var y = fromY
+    val dx = abs(toX - x)
+    val dy = -abs(toY - y)
+    val sx = if (x < toX) 1 else -1
+    val sy = if (y < toY) 1 else -1
+    var err = dx + dy
+    while (true) {
+        add(cellAt(x, y))
+        if (x == toX && y == toY) break
+        val e2 = 2 * err
+        if (e2 >= dy) {
+            err += dy
+            x += sx
+        }
+        if (e2 <= dx) {
+            err += dx
+            y += sy
+        }
+    }
+}.toIntArray()

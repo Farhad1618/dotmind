@@ -1,38 +1,9 @@
-import type { Pattern, RGB, SceneName } from "./types.ts";
+import { C, GRID, TAU, at, bitmap, clamp, fillCells, hash, trail, wrapAngle, type Cell } from "./grid.ts";
+import { ICON_COLORS, ICON_PATTERNS } from "./icon-patterns.ts";
+import { PIXEL_COLORS, PIXEL_PATTERNS } from "./pixel-patterns.ts";
+import type { ClassicScene, Pattern, RGB, SceneName } from "./types.ts";
 
-export const GRID = 8;
-const C = 3.5;
-const TAU = Math.PI * 2;
-
-const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const hash = (i: number, s: number) => {
-  const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453;
-  return x - Math.floor(x);
-};
-const at = (x: number, y: number) => y * GRID + x;
-const wrapAngle = (a: number) => ((a % TAU) + TAU) % TAU;
-
-type Cell = readonly [number, number];
-
-function bitmap(rows: readonly string[]): Cell[] {
-  const cells: Cell[] = [];
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && cells.push([x, y])));
-  return cells;
-}
-
-function trail(out: Float32Array, path: readonly Cell[], head: number, len: number, decay: number) {
-  const n = path.length;
-  for (let k = 0; k < len; k++) {
-    const i = (((Math.floor(head) - k) % n) + n) % n;
-    const [x, y] = path[i];
-    const v = k === 0 ? 1.4 : Math.pow(decay, k) * 1.05;
-    out[at(x, y)] = Math.max(out[at(x, y)], v);
-  }
-}
-
-function fillCells(out: Float32Array, cells: readonly Cell[], v: number) {
-  for (const [x, y] of cells) out[at(x, y)] = Math.max(out[at(x, y)], v);
-}
+export { GRID };
 
 const RING12: Cell[] = [[2, 2], [3, 2], [4, 2], [5, 2], [5, 3], [5, 4], [5, 5], [4, 5], [3, 5], [2, 5], [2, 4], [2, 3]];
 const CENTER: Cell[] = [[3, 3], [4, 3], [3, 4], [4, 4]];
@@ -101,7 +72,7 @@ const DISKS = [0, 3, 6].map((y) => [
   ...[1, 2, 3, 4, 5, 6].map((x) => [x, y + 1] as Cell),
 ]);
 
-export const PATTERNS: Record<SceneName, Pattern> = {
+const CLASSIC_PATTERNS: Record<ClassicScene, Pattern> = {
   breathe(t, o) {
     o.fill(0);
     const p = 0.5 + 0.5 * Math.sin(t * 1.6);
@@ -296,7 +267,7 @@ export const PATTERNS: Record<SceneName, Pattern> = {
   },
 };
 
-export const SCENE_COLORS: Record<SceneName, RGB> = {
+const CLASSIC_COLORS: Record<ClassicScene, RGB> = {
   breathe: [160, 160, 172],
   comet: [143, 125, 255],
   radar: [61, 123, 255],
@@ -315,5 +286,9 @@ export const SCENE_COLORS: Record<SceneName, RGB> = {
   serpent: [154, 107, 255],
   pulse: [255, 122, 26],
 };
+
+export const PATTERNS: Record<SceneName, Pattern> = { ...CLASSIC_PATTERNS, ...ICON_PATTERNS, ...PIXEL_PATTERNS };
+
+export const SCENE_COLORS: Record<SceneName, RGB> = { ...CLASSIC_COLORS, ...ICON_COLORS, ...PIXEL_COLORS };
 
 export const SCENE_NAMES = Object.keys(PATTERNS) as SceneName[];

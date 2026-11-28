@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useWindowDimensions, View } from "react-native";
+import { Aura } from "./Aura.tsx";
 import { DotMatrix } from "./DotMatrix.tsx";
 import { DotMindController } from "./controller.ts";
-import { containerStyle } from "./layout.ts";
+import { containerStyle, wellFrameStyle } from "./layout.ts";
+import { lookStyle } from "./lookStyle.ts";
 import { MatrixDriver } from "./matrixDriver.ts";
 import { ShimmerLabel } from "./ShimmerLabel.tsx";
 import { shimmerMode } from "./shimmer.ts";
@@ -20,6 +22,10 @@ export function DotMind({
   labels,
   palette,
   scene,
+  look,
+  shape,
+  scenes,
+  aura,
   reducedMotion,
   theme,
   paused = false,
@@ -27,20 +33,30 @@ export function DotMind({
   ...rest
 }: DotMindProps) {
   const [controller] = useState(
-    () => new DotMindController(new MatrixDriver(), tracker ? tracker.activity : activity, { label, labels, palette, scene }),
+    () =>
+      new DotMindController(new MatrixDriver(), tracker ? tracker.activity : activity, {
+        label,
+        labels,
+        palette,
+        scene,
+        look,
+        scenes,
+      }),
   );
   const presentation = useSyncExternalStore(controller.subscribe, controller.snapshot);
-  const optionsKey = JSON.stringify({ label, labels, palette, scene });
+  const optionsKey = JSON.stringify({ label, labels, palette, scene, look, scenes });
   const themeKey = JSON.stringify(theme ?? null);
   const resolved = useMemo(() => resolveTheme(theme), [themeKey]);
+  const styled = useMemo(() => lookStyle({ look, shape, aura }), [look, shape, aura]);
   const { fontScale } = useWindowDimensions();
   const fontSize = resolved.fontSize * fontScale;
   const systemReduced = useSystemReducedMotion();
   const still = reducedMotion ?? systemReduced;
   const container = useMemo(() => containerStyle(variant, resolved, fontSize), [variant, resolved, fontSize]);
+  const frame = useMemo(() => wellFrameStyle(size), [size]);
 
   useEffect(() => {
-    controller.setOptions({ label, labels, palette, scene });
+    controller.setOptions({ label, labels, palette, scene, look, scenes });
   }, [controller, optionsKey]);
 
   useEffect(() => {
@@ -54,6 +70,19 @@ export function DotMind({
 
   useAnnouncement(presentation.accessibilityLabel);
 
+  const glow = (
+    <Aura
+      color={presentation.color}
+      on={styled.aura}
+      variant={variant}
+      size={size}
+      shape={styled.shape}
+      still={still}
+      theme={resolved}
+    />
+  );
+  const matrix = <DotMatrix driver={controller.driver} size={size} shape={styled.shape} still={still} paused={paused} theme={resolved} />;
+
   return (
     <View
       accessible
@@ -63,7 +92,11 @@ export function DotMind({
       {...rest}
       style={[container, style]}
     >
-      <DotMatrix driver={controller.driver} size={size} still={still} paused={paused} theme={resolved} />
+      {variant === "bare" ? null : glow}
+      <View style={frame}>
+        {variant === "bare" ? glow : null}
+        {matrix}
+      </View>
       {presentation.text ? (
         <ShimmerLabel
           text={presentation.text}

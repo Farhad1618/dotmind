@@ -1,7 +1,9 @@
 import '../rgb.dart';
 import '../scene.dart';
 import 'ambient_patterns.dart' as ambient;
+import 'icon_patterns.dart' as icon;
 import 'pattern.dart';
+import 'pixel_patterns.dart' as pixel;
 import 'state_patterns.dart' as state;
 import 'tool_patterns.dart' as tool;
 
@@ -23,6 +25,15 @@ Pattern patternFor(Scene scene) => switch (scene) {
   Scene.orbit => ambient.orbit,
   Scene.serpent => ambient.serpent,
   Scene.pulse => ambient.pulse,
+  Scene.neural => icon.neural,
+  Scene.magnifier => icon.magnifier,
+  Scene.glyph => icon.glyph,
+  Scene.sort => icon.sort,
+  Scene.rocket => icon.rocket,
+  Scene.verified => icon.verified,
+  Scene.bug => pixel.bug,
+  Scene.blocks => pixel.blocks,
+  Scene.scan => pixel.scan,
 };
 
 const Map<Scene, Rgb> sceneColors = {
@@ -43,6 +54,15 @@ const Map<Scene, Rgb> sceneColors = {
   Scene.orbit: Rgb(61, 123, 255),
   Scene.serpent: Rgb(154, 107, 255),
   Scene.pulse: Rgb(255, 122, 26),
+  Scene.neural: Rgb(150, 104, 255),
+  Scene.magnifier: Rgb(64, 196, 236),
+  Scene.glyph: Rgb(255, 214, 64),
+  Scene.sort: Rgb(255, 120, 32),
+  Scene.rocket: Rgb(236, 72, 196),
+  Scene.verified: Rgb(64, 214, 140),
+  Scene.bug: Rgb(72, 164, 255),
+  Scene.blocks: Rgb(255, 150, 40),
+  Scene.scan: Rgb(255, 82, 72),
 };
 
 Rgb sceneColor(Scene scene) => sceneColors[scene]!;

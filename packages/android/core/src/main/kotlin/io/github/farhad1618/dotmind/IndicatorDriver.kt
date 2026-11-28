@@ -17,8 +17,10 @@ public class IndicatorDriver(public val renderer: DotRenderer = DotRenderer()) {
         palette: Map<Scene, Rgb> = emptyMap(),
         visible: Boolean = true,
         still: Boolean = false,
+        look: Look = Look.CLASSIC,
+        scenes: Map<SceneKey, Scene> = emptyMap(),
     ): Boolean {
-        val scene = sceneOverride ?: sceneFor(activity)
+        val scene = sceneOverride ?: sceneFor(activity, look, scenes)
         val color = palette[scene] ?: SceneColors[scene]
         if (presented && activity == lastActivity && scene == lastScene && color == lastColor && still == lastStill) {
             return false
