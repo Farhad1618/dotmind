@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dotmind media</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600&family=Geist+Mono:wght@400&display=block">
+<style>
+body{margin:0;background:#000;color:#fff;font:14px ui-monospace,monospace}
+canvas{display:block;max-width:100%;height:auto}
+</style>
+</head>
+<body>
+<canvas id="out"></canvas>
+<script type="module">
+import { DotRenderer, SCENE_COLORS, classifyTool, labelFor, sceneFor } from "../../packages/dotmind/dist/index.js";
+import { drawMatrix } from "../../packages/dotmind/dist/dom.js";
+
+const FPS = 20;
+const SEAM = 8;
+const SANS = "Geist, ui-sans-serif, system-ui, sans-serif";
+const MONO = "'Geist Mono', ui-monospace, Menlo, monospace";
+const BG = "#0e0e10";
+const INK = [138, 138, 146];
+const SHIMMER = 2.4;
+
+const activity = (phase, tool) => (tool ? { phase, tool, kind: classifyTool(tool) } : { phase });
+
+const STATES = [
+  activity("thinking"),
+  activity("tool", "web_search"),
+  activity("tool", "web_fetch"),
+  activity("tool", "bash"),
+  activity("tool", "read_file"),
+  activity("tool", "run_sql"),
+  activity("tool", "calculate_margin"),
+  activity("tool", "get_weather"),
+  activity("writing"),
+  activity("waiting", "deploy_config"),
+  activity("error"),
+  activity("done"),
+];
+
+const TURN = [
+  [activity("thinking"), "thinking_delta"],
+  [activity("tool", "web_search"), "server_tool_use · web_search"],
+  [activity("tool", "read_file"), "tool_use · read_file"],
+  [activity("tool", "bash"), "tool_use · bash"],
+  [activity("writing"), "text_delta"],
+  [activity("done"), "message_stop"],
+];
+
+const EIGHT = ["ember", "orbit", "prism", "serpent", "circuit", "pulse", "comet", "halo"];
+
+const caption = (a) => (a.tool ? `phase="${a.phase}" tool="${a.tool}"` : `phase="${a.phase}"`);
+
+function makeCell(spec) {
+  const scene = spec.scene ?? sceneFor(spec.activity);
+  const renderer = new DotRenderer(scene, SCENE_COLORS[scene]);
+  return { ...spec, scene, renderer, values: new Float32Array(64), rgb: [0, 0, 0] };
+}
+
+function cellWidth(cell, captionSize) {
+  ctx.font = `500 ${cell.F}px ${SANS}`;
+  const pill = 1.15 * cell.F + 0.35 * cell.F + cell.S + 0.6 * cell.F + ctx.measureText(labelFor(cell.activity)).width;
+  ctx.font = `400 ${captionSize}px ${MONO}`;
+  const cap = cell.caption ? cell.F * 0.45 + ctx.measureText(cell.caption).width : 0;
+  return Math.max(pill, cap);
+}
+
+function grid(cells, cols, W, captionSize) {
+  const gutter = 56, rowH = 142, top = 60;
+  const widths = Array.from({ length: cols }, (_, c) =>
+    Math.max(...cells.filter((_, i) => i % cols === c).map((cell) => cellWidth(cell, captionSize))),
+  );
+  const total = widths.reduce((a, b) => a + b, 0) + gutter * (cols - 1);
+  const lefts = widths.map((_, c) => (W - total) / 2 + widths.slice(0, c).reduce((a, b) => a + b, 0) + gutter * c);
+  cells.forEach((cell, i) => {
+    cell.x = lefts[i % cols];
+    cell.y = top + Math.floor(i / cols) * rowH;
+  });
+  const rows = Math.ceil(cells.length / cols);
+  return { W, H: top * 2 + rowH * rows - 46, duration: SHIMMER * 2, cells, captionSize };
+}
+
+const COMPOSITIONS = {
+  hero() {
+    const W = 1600, H = 520, S = 132, F = 58;
+    const cell = makeCell({ activity: TURN[0][0], x: 0, y: 150, S, F, center: true });
+    const seg = SHIMMER;
+    return {
+      W, H, duration: seg * TURN.length, cells: [cell],
+      tick(t) {
+        const i = Math.min(TURN.length - 1, Math.floor(t / seg + 1e-9));
+        if (cell.step !== i) {
+          cell.step = i;
+          cell.activity = TURN[i][0];
+          const scene = sceneFor(cell.activity);
+          cell.renderer.show(scene, SCENE_COLORS[scene], false);
+          cell.caption = TURN[i][1];
+        }
+      },
+      overlay(ctx, t) {
+        const dots = TURN.length;
+        const gap = 34, r = 6;
+        const x0 = W / 2 - ((dots - 1) * gap) / 2;
+        for (let k = 0; k < dots; k++) {
+          ctx.beginPath();
+          ctx.arc(x0 + k * gap, 440, r, 0, Math.PI * 2);
+          ctx.fillStyle = k === cell.step ? "#d8d8de" : "#2c2c31";
+          ctx.fill();
+        }
+      },
+      captionY: 372, captionSize: 26,
+    };
+  },
+  states() {
+    const cells = STATES.map((a, i) => makeCell({ activity: a, S: 60, F: 30, caption: caption(a), phase: i * 0.2 }));
+    return grid(cells, 3, 1600, 20);
+  },
+  eight() {
+    const cells = EIGHT.map((scene, i) =>
+      makeCell({ activity: { phase: "thinking", label: "Thinking" }, scene, S: 60, F: 30, caption: `scene="${scene}"`, phase: i * 0.3 }),
+    );
+    return grid(cells, 4, 1600, 20);
+  },
+};
+
+const out = document.getElementById("out");
+const ctx = out.getContext("2d");
+const well = document.createElement("canvas");
+const wctx = well.getContext("2d");
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.roundRect(x, y, w, h, r);
+}
+
+function shimmerFill(c, x, w, t, peakRgb, still) {
+  const g = c.createLinearGradient(x - w * 1.6, 0, x + w * 2.6, 0);
+  const ink = `rgb(${INK})`;
+  if (still) return ink;
+  const p = (t % SHIMMER) / SHIMMER;
+  const center = -0.79 + p * 2.56;
+  const toStop = (u) => (u * w + w * 1.6) / (w * 4.2);
+  const stops = [
+    [center - 0.3, ink],
+    [center - 0.072, "#ffffff"],
+    [center + 0.058, `rgb(${peakRgb})`],
+    [center + 0.31, ink],
+  ];
+  g.addColorStop(0, ink);
+  for (const [u, col] of stops) g.addColorStop(Math.min(1, Math.max(0, toStop(u))), col);
+  g.addColorStop(1, ink);
+  return g;
+}
+
+function drawCell(cell, t, comp) {
+  const { S, F } = cell;
+  const label = labelFor(cell.activity);
+  ctx.font = `500 ${F}px ${SANS}`;
+  const tw = ctx.measureText(label).width;
+  const padL = 0.35 * F, gap = 0.6 * F, padR = 1.15 * F;
+  const h = S + 0.7 * F;
+  const w = padL + S + gap + tw + padR;
+  const x = cell.center ? (comp.W - w) / 2 : cell.x;
+  const y = cell.y;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.7)";
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
+  roundRect(ctx, x, y, w, h, h / 2);
+  ctx.fillStyle = "#0a0a0b";
+  ctx.fill();
+  ctx.restore();
+  roundRect(ctx, x + 1, y + 1, w - 2, h - 2, h / 2 - 1);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#26262a";
+  ctx.stroke();
+
+  const wx = x + padL, wy = y + (h - S) / 2;
+  roundRect(ctx, wx, wy, S, S, S * 0.24);
+  ctx.fillStyle = "#050506";
+  ctx.fill();
+  if (well.width !== S) {
+    well.width = S;
+    well.height = S;
+  }
+  drawMatrix(cell.renderer, wctx, S, cell.values, cell.rgb);
+  ctx.drawImage(well, wx, wy);
+
+  const [r, g, b] = cell.rgb;
+  const peak = [((r + 510) / 3) | 0, ((g + 510) / 3) | 0, ((b + 510) / 3) | 0];
+  const still = cell.activity.phase === "done" || cell.activity.phase === "error";
+  const tx = wx + S + gap;
+  ctx.font = `500 ${F}px ${SANS}`;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = shimmerFill(ctx, tx, tw, t + (cell.phase ?? 0), peak, still);
+  ctx.fillText(label, tx, y + h / 2 + F * 0.04);
+
+  const cap = cell.caption;
+  if (cap) {
+    ctx.font = `400 ${comp.captionSize}px ${MONO}`;
+    ctx.textBaseline = "alphabetic";
+    if (cell.center) {
+      ctx.fillStyle = "#6d6d75";
+      ctx.textAlign = "center";
+      ctx.fillText(cap, comp.W / 2, comp.captionY);
+      ctx.textAlign = "left";
+    } else {
+      ctx.fillStyle = "#5c5c64";
+      ctx.fillText(cap, x + F * 0.45, y + h + comp.captionSize + 14);
+    }
+  }
+}
+
+function paint(comp, t) {
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, comp.W, comp.H);
+  const glow = ctx.createRadialGradient(comp.W * 0.3, -comp.H * 0.2, 0, comp.W * 0.3, -comp.H * 0.2, comp.W * 0.8);
+  glow.addColorStop(0, "rgba(255,255,255,0.045)");
+  glow.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, comp.W, comp.H);
+  for (const cell of comp.cells) drawCell(cell, t, comp);
+  comp.overlay?.(ctx, t);
+}
+
+async function post(name, i, blob) {
+  await fetch(`/frame?name=${name}&i=${i}`, { method: "POST", body: blob });
+}
+
+const toBlob = () => new Promise((r) => out.toBlob(r, "image/png"));
+
+async function render(name) {
+  const comp = COMPOSITIONS[name]();
+  out.width = comp.W;
+  out.height = comp.H;
+  const n = Math.round(comp.duration * FPS);
+  const dt = 1 / FPS;
+  const head = [];
+  for (let f = 0; f < n + SEAM; f++) {
+    const t = f * dt;
+    comp.tick?.(t);
+    for (const cell of comp.cells) {
+      if (f > 0) cell.renderer.step(dt);
+      cell.renderer.feed(undefined);
+    }
+    paint(comp, t % comp.duration);
+    if (f < SEAM) {
+      head.push(await createImageBitmap(out));
+      continue;
+    }
+    if (f >= n) {
+      const k = f - n;
+      ctx.globalAlpha = (k + 1) / (SEAM + 1);
+      ctx.drawImage(head[k], 0, 0);
+      ctx.globalAlpha = 1;
+      await post(name, k, await toBlob());
+      continue;
+    }
+    await post(name, f, await toBlob());
+  }
+  await fetch(`/done?name=${name}&frames=${n}&fps=${FPS}`, { method: "POST" });
+}
+
+await document.fonts.load(`500 32px Geist`);
+await document.fonts.load(`400 20px "Geist Mono"`);
+const names = (new URL(location.href).searchParams.get("only") ?? "hero,states,eight").split(",");
+for (const name of names) await render(name);
+document.title = "rendered";
+</script>
+</body>
+</html>

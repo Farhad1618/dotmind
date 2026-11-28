@@ -14,3 +14,4 @@ local.properties
 *.iml
 .idea/
 example/ios/Flutter/ephemeral/
+examples/ios/*.xcodeproj/

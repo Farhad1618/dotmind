@@ -6,6 +6,7 @@
     "build": "npm --prefix packages/dotmind run build",
     "test": "npm --prefix packages/dotmind test",
     "typecheck": "npm --prefix packages/dotmind run typecheck",
-    "demo": "npm run build && node scripts/serve.mjs"
+    "demo": "npm run build && node scripts/serve.mjs",
+    "media": "npm run build && node scripts/media.mjs"
   }
 }

@@ -4,8 +4,6 @@ import { BASE_ALPHA, createDotLook, GLOW_LEVELS, glowLevel, glowRadius, lookAt }
 import { CELLS, type MatrixGeometry } from "./geometry.ts";
 import type { MatrixPainter } from "./painter.ts";
 
-const RETAINED = 3;
-
 function antialiased(): SkPaint {
   const paint = Skia.Paint();
   paint.setAntiAlias(true);
@@ -31,8 +29,6 @@ export class SkiaPainter implements MatrixPainter {
   private readonly ink = new Float32Array(4);
   private readonly look = createDotLook();
   private readonly glows: SkMaskFilter[];
-  private readonly retained: (SkPicture | null)[] = new Array<SkPicture | null>(RETAINED).fill(null);
-  private slot = 0;
 
   constructor(geometry: MatrixGeometry, publish: (picture: SkPicture) => void) {
     this.geometry = geometry;
@@ -56,12 +52,7 @@ export class SkiaPainter implements MatrixPainter {
       this.tint(this.dotPaint, look.red, look.green, look.blue, look.alpha);
       canvas.drawCircle(xs[i], ys[i], r, this.dotPaint);
     }
-    const next = this.recorder.finishRecordingAsPicture();
-    const stale = this.retained[this.slot];
-    this.retained[this.slot] = next;
-    this.slot = (this.slot + 1) % RETAINED;
-    this.publish(next);
-    stale?.dispose();
+    this.publish(this.recorder.finishRecordingAsPicture());
   }
 
   dispose(): void {

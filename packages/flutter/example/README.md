@@ -1,8 +1,7 @@
 # dotmind example
 
-Shows every dotmind state, the bare variant, the extra scenes and a replayed Anthropic stream driving a tracker.
+One screen: a large indicator driven by an `ActivityTracker` through a scripted agent turn (thinking, web search, code, writing, done) on a loop, then every state and the ambient scenes.
 
 ```bash
-flutter create . --platforms=ios,android,macos,web
 flutter run
 ```

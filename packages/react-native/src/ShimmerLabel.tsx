@@ -81,7 +81,6 @@ export function ShimmerLabel({ text, mode, glow, theme, fontSize }: ShimmerLabel
         return shimmerPoint(at, width, height, 1, point);
       }, true);
     },
-    [width, height],
   );
 
   return (

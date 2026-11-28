@@ -2,7 +2,9 @@
 
 Dot-matrix status indicators for AI interfaces. Instead of a loader you switch on and off yourself, dotmind reads the model's stream and shows what the model is doing right now.
 
-![dotmind states](https://raw.githubusercontent.com/Farhad1618/dotmind/main/docs/preview.png)
+![dotmind following a Claude turn](https://raw.githubusercontent.com/Farhad1618/dotmind/main/docs/hero.gif)
+
+![Every dotmind state](https://raw.githubusercontent.com/Farhad1618/dotmind/main/docs/states.gif)
 
 | The model is… | The dots show | The label says |
 |---|---|---|

@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "dotmind-android"
 
-include(":core", ":adapters", ":compose")
+include(":core", ":adapters", ":compose", ":example")

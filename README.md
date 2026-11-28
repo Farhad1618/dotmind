@@ -1,8 +1,47 @@
-# dotmind
+<p align="center">
+  <img src="docs/hero.gif" alt="A dotmind pill following a Claude turn: Thinking, Searching, Reading files, Running code, Writing, Done" width="800">
+</p>
 
-Dot-matrix status indicators for AI interfaces. Instead of a loader you switch on and off yourself, dotmind reads the model's stream and shows what the model is doing right now.
+<h1 align="center">dotmind</h1>
 
-![dotmind states](docs/preview.png)
+<p align="center">
+  <b>A thinking indicator that knows what your AI is doing.</b><br>
+  It reads the model's stream and shows reasoning, searching, running code and writing as they happen.<br>
+  Web, iOS, Android, Flutter and React Native. One look, frame for frame.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/dotmind"><img alt="npm dotmind" src="https://img.shields.io/npm/v/dotmind?label=dotmind&color=8f7dff"></a>
+  <a href="https://www.npmjs.com/package/dotmind-native"><img alt="npm dotmind-native" src="https://img.shields.io/npm/v/dotmind-native?label=dotmind-native&color=8f7dff"></a>
+  <a href="https://github.com/Farhad1618/dotmind/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Farhad1618/dotmind/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-0-2ea043">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+</p>
+
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#react">React</a> ·
+  <a href="#adapters">Adapters</a> ·
+  <a href="#platforms">Platforms</a> ·
+  <a href="#options">Options</a>
+</p>
+
+## Why
+
+A spinner tells people the app is busy. It doesn't tell them whether the model is thinking, searching the web or running a query that will take a minute. dotmind follows the stream your SDK already gives you, so the indicator changes when the model changes what it's doing.
+
+- **No wiring per state.** Hand it the Anthropic, OpenAI or Vercel AI SDK stream. It works out the phase and picks a picture from the tool's name.
+- **Alive, not looping.** The matrix speeds up and brightens with the token rate, settles when the stream stalls, and cross-fades between states.
+- **Same on every screen.** Five ports all match the same 136 reference frames in their tests.
+
+## Every state
+
+<p align="center">
+  <img src="docs/states.gif" alt="All twelve dotmind states" width="800">
+</p>
+
+<details>
+<summary>What each picture means</summary>
 
 | The model is… | The dots show | The label says |
 |---|---|---|
@@ -19,15 +58,21 @@ Dot-matrix status indicators for AI interfaces. Instead of a loader you switch o
 | failed | a flashing cross | Something went wrong |
 | finished | a check mark drawn in | Done |
 
+</details>
+
 The writing scene moves one dot for every four characters received, and the whole matrix speeds up and brightens with the token rate, then settles when the stream stalls. Scenes cross-fade into each other.
 
 ## Install
 
-```bash
-npm install dotmind
-```
+| Platform | Install |
+|---|---|
+| Web: React, Vue, Svelte, plain HTML | `npm install dotmind` |
+| React Native | `npm install dotmind-native` |
+| iOS, macOS, watchOS, tvOS, visionOS | Swift Package Manager: `https://github.com/Farhad1618/dotmind`, from `0.1.0` |
+| Flutter | `dotmind: { git: { url: https://github.com/Farhad1618/dotmind, path: packages/flutter } }` until it lands on pub.dev |
+| Android (Compose) | Maven Central release coming. Until then, include `packages/android` as a module, see its [README](packages/android/README.md) |
 
-No runtime dependencies. React is an optional peer.
+The web package has no runtime dependencies. React is an optional peer.
 
 ## React
 
@@ -80,6 +125,14 @@ el.connect(tracker);
 el.activity = { phase: "tool", tool: "run_sql" };
 ```
 
+## The original eight
+
+Fixed scenes for when you only need a good-looking loader. Pass `scene` to pick one.
+
+<p align="center">
+  <img src="docs/eight.gif" alt="The eight fixed scenes: ember, orbit, prism, serpent, circuit, pulse, comet, halo" width="800">
+</p>
+
 ## Adapters
 
 | Import | Source | Entry points |
@@ -123,6 +176,11 @@ Hidden indicators stop drawing, every indicator on a page shares one animation f
 
 ## Platforms
 
+<p align="center">
+  <img src="docs/devices.png" alt="The example apps running on an iPhone simulator (SwiftUI), an Android emulator (Jetpack Compose), Flutter and React Native" width="880">
+  <br><sub>SwiftUI on iPhone · Jetpack Compose on Android · Flutter · React Native</sub>
+</p>
+
 One repo, one behaviour. Every port reproduces the same 136 reference frames in `spec/golden.json` in its own test suite, so a Claude turn looks the same on a web page, an iPhone, a Pixel and a Flutter app.
 
 | Platform | Folder | Package | Drawing | Tests |
@@ -138,7 +196,8 @@ Each folder has its own README with install steps and examples. Every port has t
 ```
 spec               the rendering contract and the golden parity fixture
 demo               live web demo replaying recorded Claude and OpenAI turns
-scripts            demo server and fixture generator
+examples           runnable iOS (SwiftUI) and React Native (Expo) apps; Android and Flutter examples live in their package folders
+scripts            demo server, fixture generator, README media renderer (node scripts/media.mjs)
 ```
 
 ```bash
